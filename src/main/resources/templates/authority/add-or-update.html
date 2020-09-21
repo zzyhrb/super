@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" th:href="@{/css/oksub.css}">
+    <link rel="stylesheet" th:href="@{/css/dtree.css}">
+    <link rel="stylesheet" th:href="@{/font/dtree/dtreefont.css}">
+</head>
+<body>
+<div class="layui-fluid" xmlns:th="http://www.thymeleaf.org">
+    <form class="layui-form" action="/authority/save" method="post">
+        <input type="hidden" name="roleId" th:value="${roleId}">
+        <input type="hidden" name="menus" id="menus">
+        <hr>
+        <div id="tree"></div>
+        <hr>
+        <div class=" layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="*">立即提交</button>
+            </div>
+        </div>
+    </form>
+</div>
+<script th:src="@{/lib/layui/layui.js}"  th:inline="javascript"></script>
+<script>
+    layui.use(['form', 'dtree', 'jquery'], function () {
+        const form = layui.form, dtree = layui.dtree, $ = layui.$;
+
+        // 初始化树
+        $.get('/menu/sys-menu/list', function (result) {
+            if (result.code === '0') {
+                let data = [];
+                // 构造第一级
+                result.data.forEach(menu => {
+                    if (menu.parentId === 0) {
+                        data.push({
+                            id: menu.id
+                            , title: menu.title
+                            , parentId: 0
+                            , checkArr: '0'
+                            , children: []
+                        });
+                    }
+                });
+                // 构造第二级
+                result.data.forEach(menu => {
+                    if (menu.parentId !== 0) {
+                        data.forEach(parentMenu => {
+                            if (menu.parentId === parentMenu.id) {
+                                parentMenu.children.push({
+                                    id: menu.id
+                                    , title: menu.title
+                                    , parentId: menu.parentId
+                                    , checkArr: '0'
+                                    , children: []
+                                });
+                            }
+                        });
+                    }
+                });
+
+                const tree = dtree.render({
+                    id: 'roleMenuTree'
+                    , elem: '#tree'
+                    , width: '100%'
+                    , checkbar: true
+                    , checkbarType: "all"
+                    , type: 'all'
+                    , data: data // 使用data加载
+                    , done: function (res, $ul, first) {
+                        if (first) {
+                            $.get('/authority/list', {roleId: [[${roleId}]]}, function (result) {
+                                if (result.code === '0') {
+                                    let checkedList = [];
+                                    result.data.forEach(roleMenu => {
+                                        checkedList.push(roleMenu.menuId);
+                                    });
+                                    if (checkedList.length > 0) {
+                                        dtree.chooseDataInit('tree', checkedList); // 初始化选中
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+                // 绑定节点点击事件
+                dtree.on("node(tree)", function (obj) {
+                    let nodeId = obj.param.nodeId;
+
+                    tree.clickNodeCheckbar(nodeId);// 点击节点选中复选框
+
+                    let checkBarNodes = dtree.getCheckbarNodesParam("tree");
+                    layer.msg(JSON.stringify(checkBarNodes));
+                });
+            }
+        });
+
+        // 表单提交前构造选中菜单
+        form.on('submit(*)', function (data) {
+            let checkedArray = [];
+            let params = dtree.getCheckbarNodesParam("tree");
+            params.forEach(menu => {
+                checkedArray.push(menu.nodeId);
+            });
+
+            $('#menus').val(checkedArray);
+
+            let index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+            parent.layer.close(index); //再执行关闭
+        });
+
+    });
+</script>
+</body>
+</html>

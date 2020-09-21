@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>查看流程图</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../css/oksub.css">
+</head>
+<body>
+<div class="ok-body">
+    <!--form表单-->
+    <img id="imgObj" />
+</div>
+<!--js逻辑-->
+<script th:src="@{/lib/layui/layui.js}"  th:inline="javascript"></script>
+<script th:inline="javascript">
+    layui.use([ "form"], function () {
+        var $ = layui.jquery;
+        let form = layui.form;
+        var src = "/activity-deployment/showDeploymentPicture?deploymentId="+[[${deploymentId}]];
+        $("#imgObj").attr("src", src);
+    });
+</script>
+</body>
+</html>

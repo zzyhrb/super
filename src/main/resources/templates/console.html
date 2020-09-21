@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" th:href="@{/css/okadmin.css}" href="css/okadmin.css">
+    <script src="lib/echarts/echarts.min.js"></script>
+
+    <style>
+        .layui-bg-number {
+            background-color: #F8F8F8;
+        }
+        .panel-body {
+            padding: 10px;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 400;
+        }
+        h5{
+            margin: 0;
+            padding: 0;
+        }
+
+        .pull-right{
+            float: right;
+        }
+        .label {
+            display: inline;
+            padding: .2em .6em .3em;
+            font-size: 75%;
+            font-weight: 700;
+            line-height: 1;
+            color: #fff;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: .25em;
+            margin-top: .3em;
+        }
+    </style>
+</head>
+<body class="ok-body-scroll" style="background-color: #f2f2f2;">
+<div class="layuimini-container">
+    <div class="layuimini-main" style="margin-left: 10px;margin-top: 20px;margin-right: 10px;">
+        <div class="layui-row layui-col-space15">
+            <div class="layui-col-md12">
+                <div class="layui-row layui-col-space15">
+                    <div class="layui-col-md6">
+                        <div class="layui-card" id="userInfo" style="height: 301px;">
+                            <div class="layui-card-header"><i class="layui-icon " style="color: #1e9fff!important;margin-right: 10px;">&#xe66f;</i>用户信息
+                                <span class="label pull-right layui-bg-blue" th:text="${session.role.name}" style="font-size: 130%;"></span>
+                            </div>
+                            <div class="layui-card-body">
+                                <div class="welcome-module">
+                                    <div class="layui-row layui-col-space10">
+                                        <div class="layui-col-xs6">
+                                            <div class="panel layui-bg-number" >
+                                                <div class="panel-body">
+                                                    <div class="panel-title">
+                                                        <h5>用户名称<span class="label pull-right layui-bg-blue">当前</span></h5>
+                                                    </div>
+                                                    <div class="panel-content">
+                                                        &nbsp;&nbsp;
+                                                        <h1 class="no-margins"  th:text="${session.userInfo.userRealName}"></h1>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="layui-col-xs6">
+                                            <div class="panel layui-bg-number">
+                                                <div class="panel-body">
+                                                    <div class="panel-title">
+                                                        <h5 class="">用户代码<span class="label pull-right layui-bg-cyan">当前</span></h5>
+                                                    </div>
+                                                    <div class="panel-content">
+                                                        &nbsp;&nbsp;
+                                                        <h1 class="no-margins"  th:text="${session.userInfo.userCode}"></h1>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="layui-col-xs6">
+                                            <div class="panel layui-bg-number">
+                                                <div class="panel-body">
+                                                    <div class="panel-title">
+                                                        <h5 class="">用户组织<span class="label pull-right layui-bg-orange">当前</span></h5>
+                                                    </div>
+
+                                                    <div class="panel-content">
+                                                        &nbsp;&nbsp;
+                                                        <h1 class="no-margins" style="font-size: 25px;line-height: 30px;" th:text="${session.organ.organName}"></h1>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="layui-col-xs6">
+                                            <div class="panel layui-bg-number">
+                                                <div class="panel-body">
+                                                    <div class="panel-title">
+                                                        <h5 class="">登录时间<span class="label pull-right layui-bg-green">当前</span></h5>
+                                                    </div>
+                                                    <div class="panel-content">
+                                                        &nbsp;&nbsp;
+                                                        <h1 class="no-margins" style="font-size: 25px;line-height: 30px;" th:text="${#dates.format(session.loginTime, 'yyyy-MM-dd HH:mm:ss')}"></h1>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-col-md6">
+                        <div class="layui-card" id="quickAccess">
+                            <div class="layui-card-header"><i class="layui-icon " style="color: #1e9fff!important;margin-right: 10px;">&#xe66e;</i>快捷入口</div>
+                            <div class="layui-card-body">
+                                <div class="welcome-module">
+                                    <div class="layui-row layui-col-space10 layuimini-qiuck">
+
+                                        <div class="layui-col-xs3 layuimini-qiuck-module"
+                                             th:each="menu,menuStat: ${quickAccessList}" style="text-align: center;">
+                                            <div style="background-color: #F8F8F8;margin-right: 1px;">
+                                                <a href="javascript:void(0)" th:onclick="goUrl([[${menu.url}]])" >
+                                                    <i class="layui-icon" th:utext="${menu.icon}" style="font-size: 25px;"></i>
+                                                    <br>
+                                                    <cite th:text="${menu.title}" style="color:#666;top:2px;"></cite>
+                                                </a>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="layui-col-md8">
+                        <div class="layui-card" id="chart">
+                            <div class="layui-card-header"><i class="layui-icon " style="color: #1e9fff!important;margin-right: 10px;">&#xe62c;</i>报表统计</div>
+                            <div class="layui-card-body">
+                                <div id="economicTrendChart"
+                                     style="width: 100%; min-height: 500px; -webkit-tap-highlight-color: transparent; user-select: none; position: relative;"
+                                     _echarts_instance_="ec_1588987098691">
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-col-md4" >
+                        <div class="layui-card" id="version">
+                            <div class="layui-card-header"><i class="layui-icon " style="color: #1e9fff!important;margin-right: 10px;">&#xe66a;</i>版本信息</div>
+                            <div class="layui-card-body layui-text">
+                                <table class="layui-table">
+                                    <colgroup>
+                                        <col width="100">
+                                        <col>
+                                    </colgroup>
+                                    <tbody>
+                                    <tr>
+                                        <td>系统名称</td>
+                                        <td>
+                                            黑龙江省总工会直属事业单位经营监督分析系统
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>当前版本</td>
+                                        <td>v1.1.2</td>
+                                    </tr>
+                                    <tr>
+                                        <td>主要特色</td>
+                                        <td>零门槛 / 响应式 / 清爽 / 极简</td>
+                                    </tr>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!--js逻辑-->
+<script th:src="@{/lib/layui/layui.js}"  th:inline="javascript"></script>
+<script type="text/javascript">
+    let element;
+    let $;
+
+    layui.use(["element", "okUtils"], function () {
+        element = layui.element;
+        $ = layui.jquery;
+        let okUtils = layui.okUtils;
+
+        if($("#quickAccess").height()<301){
+            $("#quickAccess").css("height",301);
+        }
+        $("#version").css("height",$("#chart").height())
+
+        initEconomicTrendChart();
+
+        /**
+         * 经济趋势
+         */
+        function initEconomicTrendChart() {
+            let newDate = new Date();
+            let month = newDate.getMonth() + 1;
+            let day = newDate.getDate();
+            if (month < 10) {
+                month = "0" + month;
+            }
+            if (day < 10) {
+                day = "0" + day;
+            }
+            let nowTime = newDate.getFullYear() + "-" + month + "-" + day;
+
+            var economicTrendChart = echarts.init($("#economicTrendChart")[0], "themez");
+            showLoading(economicTrendChart);
+            $.post("/statistical-analysis/economicTrend/", {date: newDate.getFullYear()+"-01-01 ~ "+nowTime,
+            economicsType: "month"}, function (response) {
+                let data = response.data;
+                if (data.xaxis.length > 0) {
+                    economicTrendChart.hideLoading();
+                    economicTrendChart.setOption(initEconomicTrendChartOption(data), true);
+                    okUtils.echartsResize([economicTrendChart]);
+                } else {
+                    emptyData(economicTrendChart);
+                }
+            });
+        }
+
+        // 经济趋势Option
+        function initEconomicTrendChartOption(data) {
+            return {
+                // title: {
+                //     text: '折线图堆叠'
+                // },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: data.legend
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '15%',
+                    containLabel: true
+                },
+                toolbox: {
+                    show: true,
+                    feature: {
+                        mark: {show: true},
+                        dataView: {show: true, readOnly: false},
+                        magicType: {show: true, type: ['line', 'bar']},
+                        restore: {show: true},
+                        saveAsImage: {show: true}
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: data.xaxis
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '金额（元）'
+
+                },
+                series: data.series
+
+            }
+        };
+
+        function showLoading(myChart) {
+            // 加载中
+            myChart.showLoading({
+                text: '拼命加载中...',
+                color: '#4cbbff',
+                textColor: '#4cbbff',
+            });
+        }
+
+        function emptyData(myChart) {
+            // 空数据
+            myChart.showLoading({
+                text: '暂无数据',
+                color: '#FFFFFF',
+                textColor: '#4cbbff'
+            });
+        }
+
+    });
+    
+    function goUrl(url) {
+        parent.$("a[data-url='"+url+"']").trigger("click");
+
+    }
+</script>
+</body>
+</html>

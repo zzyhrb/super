@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>上报列表</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../css/oksub.css">
+    <link rel="stylesheet" href="../../css/dtree.css">
+    <link rel="stylesheet" href="../../font/dtree/dtreefont.css">
+
+</head>
+<body class="ok-body-scroll">
+<div class="ok-body">
+    <table class="layui-hide" id="permissionTable" lay-filter="tableFilter"></table>
+
+</div>
+<!--js逻辑-->
+<script th:src="@{/lib/layui/layui.js}"  th:inline="javascript"></script>
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="deploy">上报</a>
+</script>
+<script>
+    layui.use(["element", "table", "laydate", "okLayer", "okUtils"], function () {
+        let table = layui.table;
+        let okUtils = layui.okUtils;
+        let okLayer = layui.okLayer;
+
+
+        initPermissionTable();
+
+        function initPermissionTable() {
+            okUtils.ajax("/activity-deployment/applyList/", "post", null, true).done(function (response) {
+                let tb = table.render({
+                    elem: '#permissionTable',
+                    height: 'full-120',
+                    data: response.data,
+                    even:true,
+                    limit: 15,
+                    page: true,
+                    size: "sm",
+                    cols: [
+                        [
+                            {type: "numbers", title: "序号", sort: true, width: 70},
+                            {field: "project_name", title: "项目名称", templet: "#projectTpl"},
+                            {field: "create_time", title: "日期", templet:'<div><span >{{ layui.util.toDateString(d.create_time, "yyyy-MM-dd") + " ~ " + layui.util.toDateString(d.end_time, "yyyy-MM-dd")  }}</span></div>',minWidth:150},
+
+                            {
+                                title: "操作",
+                                templet: "#operationTpl",
+                                align: "center",
+                                fixed: "right",
+                                toolbar: '#barDemo'
+                            }
+                        ]
+                    ],
+                    done: function (res, curr, count) {
+                        console.info(res, curr, count);
+                    }
+                });
+            });
+
+        }
+
+        table.on("tool(tableFilter)", function (obj) {
+            let data = obj.data;
+            switch (obj.event) {
+                case "deploy":
+                    deploy(data.apply_flag,data.tableName);
+                    break;
+            }
+        });
+
+
+
+
+
+        function deploy(applyFlag,tableName){
+            okLayer.confirm("确定要上报？", function () {
+                okUtils.ajax("/activity-deployment/startDeployment", "post", {deploymentId: [[${deploymentId}]],applyFlag:applyFlag,tableName:tableName}, true).done(function (response) {
+                    layer.msg(response.msg,{icon: 1, time: okLayer.time},function () {
+                        initPermissionTable();
+                    });
+                }).fail(function (error) {
+                });
+            })
+        }
+
+    })
+    ;
+</script>
+<script type="text/html" id="projectTpl">
+    <span class="layui-btn layui-btn-normal layui-btn-xs">{{d.project_name}}</span>
+</script>
+
+</body>
+</html>

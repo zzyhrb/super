@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" th:href="@{/css/oksub.css}" href="../../css/oksub.css">
+    <link rel="stylesheet" type="text/css" href="http://www.jq22.com/jquery/font-awesome.4.6.0.css">
+    <style type="text/css">
+        .selectBox {
+            width: 100%;
+            height: 36px;
+            line-height: 36px;
+
+        }
+
+        input::-ms-clear, input::-ms-reveal {
+            /*clear去掉叉  reveal去掉眼睛;但是只能去掉ie10及以上，ie9及以下去不掉*/
+            display: none;
+        }
+
+        .inputCase {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .inputCase input.imitationSelect {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            display: block;
+            text-indent: 10px;
+            cursor: default;
+        }
+
+        .inputCase i.fa {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            color: #007AFF;
+            font-size: 20px;
+        }
+
+        .fa {
+            cursor: pointer;
+        }
+
+        .selectUl {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: 42px;
+            padding: 5px 0;
+            z-index: 899;
+            min-width: 100%;
+            border: 1px solid #d2d2d2;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: #fff;
+            border-radius: 2px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .12);
+            box-sizing: border-box;
+        }
+
+        .selectUl li {
+            height: 36px;
+            line-height: 36px;
+            list-style: none;
+            text-indent: 20px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .selectUl li:hover {
+            background: #ddd;
+        }
+
+        .selectUl li:last-child {
+            border-bottom: 0 none;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-fluid" xmlns:th="http://www.thymeleaf.org">
+    <form class="layui-form" method="post">
+        <input type="hidden" name="type" value="switchUser">
+
+        <hr>
+        <div class="layui-form-item">
+            <label class="layui-form-label">用户代码</label>
+            <div class="layui-input-block">
+                <!--<input type="text" name="userCode" placeholder="用户代码" autocomplete="off" class="layui-input"
+                       lay-verify="required">-->
+                <div class="selectBox" >
+                    <div class="inputCase">
+                        <input class="imitationSelect" name="userCode" type="text"/>
+                        <i class="fa fa-caret-down"></i>
+                    </div>
+                    <ul class="selectUl" th:if="${!userList.isEmpty()}">
+                        <li th:each="user:${userList}" th:attr="oliName=${user.userCode},oliId=${user.userPassword}"
+                            th:text="${user.userCode}" class="actived_li"></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">用户密码
+            </label>
+            <div class="layui-input-block">
+                <input type="password" name="userPassword" placeholder="用户密码" class="layui-input"
+                       lay-verify="required|password" autoComplete="new-password">
+            </div>
+        </div>
+
+        <hr>
+        <div class=" layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="login">登录</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+<script th:src="@{/lib/layui/layui.js}" th:inline="javascript"></script>
+<script>
+    layui.use(['form', 'jquery', 'okUtils', 'okLayer'], function () {
+        const form = layui.form;
+        const okUtils = layui.okUtils;
+        const okLayer = layui.okLayer;
+        let $ = layui.jquery;
+
+        /**
+         * 数据校验
+         */
+        form.verify({
+            password: [/^[\S]{6,12}$/, "密码必须6到12位，且不能出现空格"],
+            captcha: function (val) {
+                if (verifyCode.validate(val) !== "true") {
+                    return verifyCode.validate(val)
+                }
+            }
+        });
+
+        /**
+         * 表单提交
+         */
+        form.on("submit(login)", function (data) {
+
+            okUtils.ajax("/login", "post", data.field, true).done(function (response) {
+                if (response.code === "0") {
+                    layer.msg("切换成功！", {icon: 1, time: okLayer.time}, function () {
+                        top.location.reload()
+                    });
+
+                }
+                // okLayer.greenTickMsg(response.msg, function () {
+                // })
+            }).fail(function (error) {
+            });
+            return false;
+        });
+        //点击右边箭头icon时候
+        $(".selectBox .fa").on("click", function (event) {
+            $(this).parent().next().toggle();//ul弹窗展开
+            if ($(this).hasClass("fa-caret-down")) {
+                $(this).removeClass("fa-caret-down").addClass("fa-caret-up")//点击input选择适合，小图标动态切换
+            } else {
+                $(this).addClass("fa-caret-down").removeClass("fa-caret-up")//点击input选择适合，小图标动态切换
+            }
+            if (event.stopPropagation) {
+                // 针对 Mozilla 和 Opera
+                event.stopPropagation();
+            } else if (window.event) {
+                // 针对 IE
+                window.event.cancelBubble = true;
+            }
+        });
+
+        $(".selectUl li").click(function (event) {
+            event = event || window.event;
+            $(this).addClass("actived_li").siblings().removeClass("actived_li");//点击当前的添加。actived_li这个类；其他的移除这个类名
+            var oliName = $(this).attr("oliName");//定义一个name属性，获取点击的元素属性赋值到当前，方便动态化传值
+            var oliId = $(this).attr("oliId");//定义一个id属性，获取点击的元素属性赋值到当前，方便数据交互传值
+            $(this).parent().prev().children().val(oliName); //把当前点击的name赋值到显示的input的val里面
+            $(this).parent().prev().children().attr("oliName", oliName);//把当前点击的oliName赋值到显示的input的oliName里面
+            $(this).parent().prev().children().attr("oliId", oliId);//把当前点击的oliId赋值到显示的input的oliId里面
+            $("input[name='userPassword']").val(oliId);
+
+        });
+
+
+        $(".selectUl li").eq(0).trigger("click");
+
+        //点击任意地方隐藏下拉
+        $(document).click(function (event) {
+            event = event || window.event;
+            $(".inputCase .fa").removeClass("fa-caret-up").addClass("fa-caret-down")//当点隐藏ul弹窗时候，把小图标恢复原状
+            $(".selectUl").hide();//当点击空白处，隐藏ul弹窗
+        });
+
+    });
+</script>
+</body>
+</html>

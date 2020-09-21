@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>权限列表</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../css/oksub.css">
+    <link rel="stylesheet" href="../../css/dtree.css">
+    <link rel="stylesheet" href="../../font/dtree/dtreefont.css">
+
+</head>
+<body class="ok-body-scroll">
+<div class="ok-body">
+    <table class="layui-hide" id="permissionTable" lay-filter="tableFilter"></table>
+
+</div>
+<!--js逻辑-->
+<script th:src="@{/lib/layui/layui.js}"  th:inline="javascript"></script>
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-primary layui-btn-sm" lay-event="delete">删除</a>
+    <a class="layui-btn layui-btn-primary layui-btn-sm" lay-event="deploy">部署</a>
+    <a class="layui-btn layui-btn-sm" lay-event="edit">编辑</a>
+</script>
+<script>
+    layui.use(["element", "table", "laydate", "okLayer", "tree", "okUtils", "okMock", "dtree"], function () {
+        let table = layui.table;
+        let laydate = layui.laydate;
+        let okUtils = layui.okUtils;
+        let okMock = layui.okMock;
+        let okLayer = layui.okLayer;
+
+
+        initPermissionTable();
+
+        function initPermissionTable() {
+            okUtils.ajax("/activity-model/list/", "post", null, true).done(function (response) {
+                let tb = table.render({
+                    elem: '#permissionTable',
+                    height: 'full-80',
+                    data: response.data,
+                    limit: 15,
+                    page: true,
+                    toolbar: "#toolbarTpl",
+                    size: "lg",
+                    cols: [
+                        [
+                            {type: "numbers", title: "序号", sort: true, width: 70},
+                            {field: "key", title: "模板ID"},
+                            {field: "name", title: "模板名称"},
+                            {field: "version", title: "模板版本"},
+                            {field: "metaInfo", title: "元数据", minWidth: 150},
+                            {
+                                title: "操作",
+                                templet: "#operationTpl",
+                                align: "center",
+                                fixed: "right",
+                                toolbar: '#barDemo'
+                            }
+                        ]
+                    ],
+                    done: function (res, curr, count) {
+                        console.info(res, curr, count);
+                    }
+                });
+            });
+
+        }
+
+        table.on("tool(tableFilter)", function (obj) {
+            let data = obj.data;
+            switch (obj.event) {
+                case "add":
+                    addOrEditPage("", "add");
+                    break;
+                case "edit":
+                    window.open("/activity-model/editor/" + data.id);
+                    break;
+                case "delete":
+                    del(data.id,data.deploymentId);
+                    break;
+                case "deploy":
+                    deploy(data.id, data.deploymentId);
+                    break;
+            }
+        });
+        table.on("toolbar(tableFilter)", function (obj) {
+            switch (obj.event) {
+                case "add":
+                    addOrEditPage("", "add");
+                    break;
+            }
+        });
+
+        // 添加修改
+        function addOrEditPage(modelId, type) {
+            okLayer.open(type == "add" ? "添加模板" : "编辑模板", "/activity-model/addOrEditPage?modelId=" + modelId + "&type=" + type, "90%", "90%", null, function () {
+                initPermissionTable();
+            })
+        }
+
+        // 删除
+        function del(id, deploymentId){
+            if (deploymentId == null || deploymentId == '') {
+
+                okLayer.confirm("确定要删除吗？", function () {
+                    okUtils.ajax("/activity-model/removeModel", "post", {modelId: id}, true).done(function (response) {
+                        layer.msg(response.msg,{icon: 1, time: okLayer.time},function () {
+                            initPermissionTable();
+                        });
+                    }).fail(function (error) {
+                    });
+                })
+            }else{
+                layer.msg("该模板已部署，无法删除！", {icon: 2, time: okLayer.time});
+            }
+    }
+
+    // 部署
+    function deploy(id, deploymentId) {
+        if (deploymentId == null || deploymentId == '') {
+            okLayer.confirm("确定要部署吗？", function () {
+                okUtils.ajax("/activity-model/deployProcessEngine", "post", {modelId: id}, true).done(function (response) {
+                    layer.msg(response.msg,{icon: 1, time: okLayer.time},function () {
+                        initPermissionTable();
+                    });
+                }).fail(function (error) {
+                });
+            })
+        } else {
+            layer.msg("该模板已部署，无法重新部署！", {icon: 2, time: okLayer.time});
+        }
+
+    }
+    })
+    ;
+</script>
+<!-- 头工具栏模板 -->
+<script type="text/html" id="toolbarTpl">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="add">添加</button>
+    </div>
+</script>
+
+</body>
+</html>

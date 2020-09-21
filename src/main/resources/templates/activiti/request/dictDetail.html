@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="stylesheet" href="../../css/oksub.css">
+  <link rel="stylesheet" href="../../css/dtree.css">
+  <link rel="stylesheet" href="../../font/dtree/dtreefont.css">
+
+</head>
+<body class="ok-body-scroll">
+<div class="ok-body">
+
+  <table id="permissionTable"></table>
+</div>
+<!--js逻辑-->
+<script th:src="@{/lib/layui/layui.js}" th:inline="javascript"></script>
+
+<script th:inline="javascript">
+  layui.use(["element", "table", "laydate", "okLayer", "okUtils"], function () {
+    let table = layui.table
+    let laydate = layui.laydate
+    let okUtils = layui.okUtils
+    let okLayer = layui.okLayer
+    $ = layui.jquery
+
+    laydate.render({elem: '#startTime', type: "datetime"})
+    laydate.render({elem: '#endTime', type: "datetime"})
+    initPermissionTable()
+
+    function initPermissionTable() {
+      okUtils.ajax("/activity-request/dictDetail/list/?detailId=" + [[${detailId}]], "post", null, true).done(function (response) {
+        table.render({
+          elem: '#permissionTable',
+          height: 'full-120',
+          data: response.data,
+          limit: 20,
+
+          page: true,
+          cols: [
+            [
+              {type: "numbers", align: "center", title: "序号", width: 70, fixed: "left"},
+              {title: "名称", align: "center", field: "dict_name"},
+              {title: "描述", align: "center", field: "dict_descript"},
+              {
+                title: "金额（元）",
+                align: "right",
+                templet: '<div>{{d.value }}</div>'
+              }
+
+
+            ]]
+
+        })
+      })
+
+    }
+  })
+
+
+
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,118 @@
+<div class="layui-fluid" xmlns:th="http://www.thymeleaf.org">
+    <form class="layui-form" lay-filter="frm" action="/user/save" method="post">
+        <input type="hidden" name="userId" th:if="${null != data && null != data.userId}" th:value="${data.userId}">
+        <input type="hidden" name="userPassword" th:if="${null != data && null != data.userPassword}"
+               th:value="${data.userPassword}">
+        <hr>
+        <div class="layui-form-item">
+            <label class="layui-form-label">用户代码</label>
+            <div class="layui-input-block">
+                <input type="text" name="userCode" placeholder="用户代码" class="layui-input"
+                       lay-verify="required|number"
+                       th:value="${null != data && null != data.userCode ? data.userCode : ''}" maxlength="11">
+            </div>
+        </div>
+        <div class="layui-form-item" th:if="${null == data}">
+            <label class="layui-form-label">密码</label>
+            <div class="layui-input-block">
+                <input type="password" name="userPassword" placeholder="密码" autocomplete="off" class="layui-input"
+                       lay-verify="required|pass">
+            </div>
+        </div>
+        <div class="layui-form-item" th:if="${null == data}">
+            <label class="layui-form-label">确认密码</label>
+            <div class="layui-input-block">
+                <input type="password" name="userPasswordCheck" placeholder="确认密码" autocomplete="off"
+                       class="layui-input" lay-verify="required|pass" id="userPasswordCheck">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">姓名</label>
+            <div class="layui-input-block">
+                <input type="text" name="userRealName" placeholder="姓名" class="layui-input"
+                       lay-verify="required"
+                       th:value="${null != data && null != data.userRealName ? data.userRealName : ''}">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">角色</label>
+            <div class="layui-input-block">
+                <select name="roleId" lay-verify="required" lay-search>
+                    <option th:each="role : ${roleList}" th:value="${role.id}" th:text="${role.name}">--</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">机构</label>
+            <div class="layui-input-block">
+                <select name="organId" lay-verify="required" lay-search>
+                    <option th:each="organ : ${organList}" th:value="${organ.organId}" th:text="${organ.organName}">--
+                    </option>
+                </select>
+            </div>
+        </div>
+        <hr>
+        <div class=" layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="*">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+    <script th:inline="javascript">
+        layui.use(['form', 'jquery', 'layer'], function () {
+            const form = layui.form;
+            const $ = layui.$;
+            const layer = layui.layer;
+
+            let flag = false;
+
+            // 加载表单
+            form.render();
+            // 回显表单初始值
+            //给表单赋值
+            if (null !== [[${data}]]) {
+                form.val("frm", { //formTest 即 class="layui-form" 所在元素属性 lay-filter="" 对应的值
+                    roleId: [[${data?.roleId}]]
+                    , organId: [[${data?.organId}]]
+                });
+            }
+
+            form.on('submit(*)', function (data) {
+                $.ajax({
+                    url: '/user/check/phone',
+                    type: 'post',
+                    async: false,
+                    data: {
+                        'userCode': data.field.userCode,
+                        'userId': [[${data?.userId}]]
+                    },
+                    success: function (result) {
+                        if (result.code !== "0") {
+                            flag = true;
+                            layer.msg('用户代码已存在', {icon: 5, anim: 6});
+                        } else {
+                            flag = false;
+                        }
+                    }
+                });
+                form.verify({
+                    pass: [
+                        /^[\S]{6,12}$/
+                        , '密码必须6到12位，且不能出现空格'
+                    ]
+                });
+                // 校验两次密码是否一致
+                if (data.field.userPassword !== data.field.userPasswordCheck && null === [[${data}]]) {
+                    flag = true;
+                    layer.msg('两次密码不一致', {icon: 5, anim: 6});
+                }
+
+                if (flag) {
+                    return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+                }
+            });
+
+        });
+    </script>
+</div>

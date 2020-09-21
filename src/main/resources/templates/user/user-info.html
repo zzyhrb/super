@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" th:href="@{/css/oksub.css}" href="../../css/oksub.css">
+</head>
+<body>
+<div class="layui-fluid" xmlns:th="http://www.thymeleaf.org">
+    <form class="layui-form" action="/user/save/info" method="post">
+        <input type="hidden" name="userId" th:value="${data.userId}">
+        <input type="hidden" name="userPassword" th:value="${data.userPassword}">
+        <hr>
+        <div class="layui-form-item">
+            <label class="layui-form-label">用户代码</label>
+            <div class="layui-input-block">
+                <input type="text" name="userCode" placeholder="用户代码" class="layui-input"
+                       lay-verify="required|phone|number" th:value="${data.userCode}">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">姓名</label>
+            <div class="layui-input-block">
+                <input type="text" name="userRealName" placeholder="姓名" class="layui-input"
+                       lay-verify="required" th:value="${data.userRealName}">
+            </div>
+        </div>
+        <hr>
+        <div class=" layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="*">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+<script th:src="@{/lib/layui/layui.js}"  th:inline="javascript"></script>
+<script>
+    layui.use(['form', 'jquery', 'layer'], function () {
+        const form = layui.form;
+        const $ = layui.$;
+        const layer = layui.layer;
+
+        let flag = false;
+
+        form.on('submit(*)', function (data) {
+            // 校验用户代码
+            $.ajax({
+                url: '/user/check/phone',
+                type: 'post',
+                async: false,
+                data: {'userCode': data.field.userCode, 'userId': [[${data?.userId}]]},
+                success: function (result) {
+                    if (result.code !== "0") {
+                        flag = true;
+                        layer.msg('用户代码已存在', {icon: 5, anim: 6});
+                    } else {
+                        flag = false;
+                    }
+                }
+            });
+
+            if (flag) {
+                return false;
+            }
+        });
+    });
+</script>
+</body>
+</html>

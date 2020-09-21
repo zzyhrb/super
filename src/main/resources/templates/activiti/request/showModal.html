@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>审批</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../css/oksub.css">
+</head>
+<body>
+<div class="ok-body">
+    <!--form表单-->
+    <form class="layui-form  ok-form">
+        <input type="hidden" th:value="${tableName}" name="tableName">
+        <input type="hidden" th:value="${applyFlag}" name="applyFlag">
+        <input type="hidden" th:value="${taskId}" name="taskId">
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="key" th:value="${data.processDefinitionName}" maxlength="100"
+                       placeholder="请输入名称"
+                       autocomplete="off" class="layui-input layui-disabled " lay-verify="required" readonly="readonly">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">上报人</label>
+            <div class="layui-input-block">
+                <input name="name" type="hidden" th:value="${user.userId}">
+                <input type="text" th:value="${user.userRealName}" maxlength="50" placeholder="请输入编码"
+                       autocomplete="off" class="layui-input layui-disabled" lay-verify="required" readonly="readonly">
+            </div>
+        </div>
+
+        <div class="layui-form-item" th:if="${tableName ne null and applyFlag ne null}">
+            <label class="layui-form-label">详情</label>
+            <div class="layui-input-block">
+                <input type="text" id="detail" value="点击详情" maxlength="50"
+                       autocomplete="off" class="layui-input layui-disabled" lay-verify="required" readonly="readonly">
+            </div>
+        </div>
+        <div class="layui-form-item" th:each="obj : ${dataList}">
+            <label class="layui-form-label" th:for="${obj.id}" th:text="${obj.name}"></label>
+            <div class="layui-input-block">
+
+                <select th:name="${obj.id}" th:if="${obj.type.name eq 'boolean'}">
+                    <option value="true">通过</option>
+                    <option value="false">不通过</option>
+                </select>
+                <input type="text" th:name="${obj.id}" th:if="${obj.type.name eq 'string'}" maxlength="50"
+                       th:placeholder="${obj.name}"
+                       autocomplete="off" class="layui-input" lay-verify="required">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="add">立即提交</button>
+            </div>
+        </div>
+    </form>
+</div>
+<!--js逻辑-->
+<script th:src="@{/lib/layui/layui.js}"  th:inline="javascript"></script>
+<script th:inline="javascript">
+    layui.use(["form", "okLayer", "okUtils"], function () {
+        var $ = layui.jquery;
+        let form = layui.form;
+        let okLayer = layui.okLayer;
+        let okUtils = layui.okUtils;
+
+        $("#detail").on("click", function () {
+
+            window.open("/activity-request/detail?applyFlag=" + [[${applyFlag}]] + "&tableName=" + [[${tableName}]], 'newwindow', 'height=100000, width=100000, top=0, left=0, toolbar=no, menubar=no, scrollbars=no, resizable=no, location=no, status=no')
+
+        })
+
+        form.on("submit(add)", function (data) {
+            var fields = $(data.form).serialize();
+
+
+            okUtils.ajax("/activity-request/reloadForm", "post", fields, true).done(function (response) {
+                okLayer.greenTickMsg("审批成功", function () {
+                    parent.layer.close(parent.layer.getFrameIndex(window.name));
+                });
+            }).fail(function (error) {
+            });
+
+            return false;
+        });
+    });
+</script>
+</body>
+</html>

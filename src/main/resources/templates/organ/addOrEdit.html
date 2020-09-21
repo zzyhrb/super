@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>添加用户</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../css/oksub.css">
+</head>
+<body>
+<div class="ok-body">
+    <!--form表单-->
+    <form class="layui-form layui-form-pane ok-form">
+        <input type="hidden" th:value="${type}" name="type">
+        <input type="hidden" th:value="${organId}" name="organId">
+        <input type="hidden" th:value="${parentId}" name="parentId">
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">名称</label>
+            <div class="layui-input-block">
+                <input type="text" th:if="${sysOrgan ne null}" name="organName" th:value="${sysOrgan.organName}" maxlength="100" placeholder="请输入名称" autocomplete="off" class="layui-input" lay-verify="required">
+                <input type="text" th:if="${sysOrgan eq null}" name="organName" maxlength="100" placeholder="请输入名称" autocomplete="off" class="layui-input" lay-verify="required">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">排序</label>
+            <div class="layui-input-block">
+                <input type="text" th:if="${sysOrgan ne null}"  name="organOrder" th:value="${sysOrgan.organOrder}" placeholder="请输入正整数" autocomplete="off" class="layui-input" lay-verify="required">
+                <input type="text" th:if="${sysOrgan eq null}" name="organOrder" placeholder="请输入正整数" autocomplete="off" class="layui-input" lay-verify="required">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">类型</label>
+            <div class="layui-input-block">
+                <select name="typeId" >
+                    <option th:each="type,typeStat : ${typeList}" th:value="${type.typeId}" th:text="${type.typeName}" th:selected="${type.typeId eq typeId}" ></option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">备注</label>
+            <div class="layui-input-block">
+                <textarea name="organRemark" th:if="${sysOrgan ne null}" th:text="${sysOrgan.organRemark}" placeholder="请输入内容" class="layui-textarea"></textarea>
+                <textarea name="organRemark" th:if="${sysOrgan eq null}" placeholder="请输入内容" class="layui-textarea"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="add">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+<!--js逻辑-->
+<script th:src="@{/lib/layui/layui.js}"  th:inline="javascript"></script>
+<script th:inline="javascript">
+    layui.use(["element", "form", "laydate", "okLayer", "okUtils"], function () {
+        let form = layui.form;
+        let laydate = layui.laydate;
+        let okLayer = layui.okLayer;
+        let okUtils = layui.okUtils;
+
+        laydate.render({elem: "#birthday", type: "datetime"});
+
+        // form.verify({
+        //     birthdayVerify: [/^((((1[6-9]|[2-9]\d)\d{2})-(0?[13578]|1[02])-(0?[1-9]|[12]\d|3[01]))|(((1[6-9]|[2-9]\d)\d{2})-(0?[13456789]|1[012])-(0?[1-9]|[12]\d|30))|(((1[6-9]|[2-9]\d)\d{2})-0?2-(0?[1-9]|1\d|2[0-8]))|(((1[6-9]|[2-9]\d)(0[48]|[2468][048]|[13579][26])|((16|[2468][048]|[3579][26])00))-0?2-29-))(\s(([01]\d{1})|(2[0123])):([0-5]\d):([0-5]\d))?$/, '日期格式不正确']
+        // });
+
+        form.on("submit(add)", function (data) {
+            okUtils.ajax("/organ/addOrEdit", "post", data.field, true).done(function (response) {
+                okLayer.greenTickMsg([[${type}]]=="add"?"添加成功":"修改成功", function () {
+                    parent.layer.close(parent.layer.getFrameIndex(window.name));
+                });
+            }).fail(function (error) {
+            });
+            return false;
+        });
+    });
+</script>
+</body>
+</html>

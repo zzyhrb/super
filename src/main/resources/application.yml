@@ -1,0 +1,41 @@
+server:
+  port: 8080 # 端口
+spring:
+  datasource:
+#    url: jdbc:sqlserver://42.101.44.131;databaseName=SuperviseAnalysisDB # 数据库地址
+    url: jdbc:sqlserver://139.186.30.8;databaseName=SuperviseAnalysisDB1 # 数据库地址
+    username: sa # 账号
+    password: Hckj201509 # 密码
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver # 驱动
+  thymeleaf:
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+  activiti: # 工作流
+    database-schema-update: true
+    check-process-definitions: false
+    db-identity-used: true
+    db-history-used: true
+    history-level: full
+    jpa-enabled: false
+    security:
+      basic:
+        enabled=false:
+    async-executor-activate: false
+    
+logging: # 日志
+  config: classpath:logback-spring.xml
+  path: E:\project\myLog # 日志位置
+  level:
+    com:
+      lawt:
+        repository:
+    dao: debug
+    org:
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+backup: # 备份文件
+  upload-path: "e:\\superviseanalysis\\backup" # 上传路径,上传到服务器路径
+  download-path: "https://www.baidu.com" # 下载路径,外网访问

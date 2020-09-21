@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>权限列表</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../css/oksub.css">
+    <link rel="stylesheet" href="../../css/dtree.css">
+    <link rel="stylesheet" href="../../font/dtree/dtreefont.css">
+
+</head>
+<body class="ok-body-scroll">
+    <div class="ok-body">
+        <!--面包屑导航区域-->
+        <!--<div class="ok-body-breadcrumb">
+                <span class="layui-breadcrumb">
+                    <a><cite>首页</cite></a>
+                    <a><cite>常用页面</cite></a>
+                    <a><cite>权限列表</cite></a>
+                </span>
+            <a class="layui-btn layui-btn-sm" href="javascript:location.replace(location.href);" title="刷新">
+                <i class="layui-icon layui-icon-refresh"></i>
+            </a>
+        </div>
+        &lt;!&ndash;模糊搜索区域&ndash;&gt;
+        <div class="layui-row">
+            <form class="layui-form layui-col-md12 ok-search">
+                <input class="layui-input" placeholder="开始日期" autocomplete="off" id="startTime">
+                <input class="layui-input" placeholder="截止日期" autocomplete="off" id="endTime">
+                <input class="layui-input" placeholder="请输入权限名" autocomplete="off">
+                <button class="layui-btn" lay-submit="" lay-filter="search">
+                    <i class="layui-icon layui-icon-search"></i>
+                </button>
+            </form>
+        </div>-->
+
+<!--        <div class="layui-row">-->
+<!--            <div class="layui-col-md5">-->
+<!--                <div id="permissionTree"></div>-->
+<!--            </div>-->
+<!--            <div class="layui-col-md7">-->
+<!--                <table class="layui-hide" id="permissionTable" lay-filter="tableFilter"></table>-->
+<!--            </div>-->
+<!--        </div>-->
+        <div class="layui-row layui-col-space10">
+            <div class="layui-col-md4">
+                    <div class="layui-card">
+                    <div class="layui-card-header layui-bg-cyan">组织列表</div>
+                    <div class="layui-card-body" id="permissionTree" style="overflow: auto;"></div>
+                </div>
+            </div>
+            <div class="layui-col-md8">
+                <div class="layui-card">
+                    <div class="layui-card-header layui-bg-cyan">项目列表</div>
+                    <div class="layui-card-body" id="card-content" style="overflow: auto;">
+                        <div class="layui-row" id="show-maincontent">
+                            <table class="layui-hide" id="permissionTable" lay-filter="tableFilter"></table>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--js逻辑-->
+    <script th:src="@{/lib/layui/layui.js}"  th:inline="javascript"></script>
+    <script type="text/html" id="barDemo">
+        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="set">设置</a>
+<!--        <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="insert">录入</a>-->
+
+        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+
+    </script>
+    <script th:inline="javascript">
+        layui.use(["table", "laydate", "okLayer", "dtree", "okUtils"], function () {
+            let table = layui.table;
+            let laydate = layui.laydate;
+            let okUtils = layui.okUtils;
+            let okLayer = layui.okLayer;
+            let dtree = layui.dtree;
+            laydate.render({elem: '#startTime', type: "datetime"});
+            laydate.render({elem: '#endTime', type: "datetime"});
+
+            function initPermissionTree() {
+
+                okUtils.ajax("/organ/tree/", "get", null, true).done(function (response) {
+                    var DTree = dtree.render({
+                        elem: "#permissionTree",
+                        data: response.data
+                    });
+
+                    dtree.on("node('permissionTree')" ,function(obj){
+                        initPermissionTable(obj.param.nodeId);
+                    });
+
+                    initPermissionTable([[${session.organ.organId}]]);
+                }).fail(function (error) {
+                });
+            }
+
+            function initPermissionTable(organId) {
+                okUtils.ajax("/project/list/?organId="+organId, "post", null, true).done(function (response) {
+                    table.render({
+                        elem: '#permissionTable',
+                        height: 'full-120',
+                        data: response.data,
+                        limit: 20,
+                        page: true,
+
+                        toolbar:"#toolbarTpl",
+                        size: "sm",
+                        cols: [
+                            [
+                                {type:"numbers", title: "序号", width: 70, sort: true, fixed: "left"},
+                                {field: "projectName", title: "项目名称", width: 150},
+                                {field: "projectDescript", title: "项目描述", width: 80},
+                                {field: "organName", title: "组织名称", width: 120},
+                                {field: "typeName", title: "组织类型", width: 80},
+                                {field: "userRealName", title: "创建人", width: 100},
+                                {field: "isDelete", title: "状态", width: 70, templet: "#typeTpl"},
+                                {field: "createTime", title: "创建时间", width: 150,templet:'<div>{{ layui.util.toDateString(d.createTime, "yyyy-MM-dd HH:mm:ss") }}</div>',minWidth:150},
+                                {title: "操作", width: 212, templet: "#operationTpl", align: "center", fixed: "right",toolbar: '#barDemo'}
+                            ]
+                        ],
+                        done: function (res, curr, count) {
+                            console.info(res, curr, count);
+                        }
+                    });
+                });
+
+            }
+
+            table.on("tool(tableFilter)", function (obj) {
+                let data = obj.data;
+                switch (obj.event) {
+                    case "edit":
+                        addOrEditPage(data.projectId,"edit");
+                        break;
+                    case "del":
+                        del(data.projectId);
+                        break;
+                    case "set":
+                        set(data.projectId);
+                        break;
+                }
+            });
+            table.on("toolbar(tableFilter)", function (obj) {
+                switch (obj.event) {
+                    case "add":
+                        addOrEditPage("","add");
+                        break;
+                }
+            });
+            initPermissionTree();
+
+            function del(id) {
+                okLayer.confirm("确定要删除吗？", function () {
+                    okUtils.ajax("/project/del/", "delete", {projectId: id}, true).done(function (response) {
+                        okLayer.greenTickMsg(response.msg, function () {
+                            initPermissionTable([[${session.organ.organId}]]);
+                        });
+                    }).fail(function (error) {
+                    });
+                })
+            }
+
+            // 添加修改
+            function addOrEditPage(projectId,type) {
+                okLayer.open(type=="add"?"添加":"编辑", "/project/addOrEditPage?projectId=" + projectId+"&type="+type, "90%", "90%", null, function () {
+                    initPermissionTable([[${session.organ.organId}]]);
+                })
+            }
+
+            function set(id) {
+                okLayer.open("设置项目", "/project/set?projectId=" + id, "90%", "90%", null, function () {
+                })
+            }
+
+
+        });
+    </script>
+    <!--行工具栏模板-->
+    <script type="text/html" id="operationTpl">
+        <a href="javascript:" title="编辑" lay-event="edit"><i class="layui-icon">&#xe642;</i></a>
+        <a href="javascript:" title="删除" lay-event="del"><i class="layui-icon">&#xe640;</i></a>
+    </script>
+
+    <!-- 头工具栏模板 -->
+    <script type="text/html" id="toolbarTpl">
+        <div class="layui-btn-container">
+            <button class="layui-btn layui-btn-sm" lay-event="add">添加</button>
+        </div>
+
+    </script>
+
+    <script type="text/html" id="typeTpl">
+
+        {{#  if(d.isDelete == 0){ }}
+            <span class="layui-btn layui-btn-normal layui-btn-xs">启用</span>
+        {{#  } else if(d.isDelete == -1){ }}
+            <span class="layui-btn layui-btn-warm layui-btn-xs">删除</span>
+        {{#  } else if(d.isDelete == 1) { }}
+            <span class="layui-btn layui-btn-danger layui-btn-xs">停止</span>
+        {{#  } }}
+    </script>
+</body>
+</html>

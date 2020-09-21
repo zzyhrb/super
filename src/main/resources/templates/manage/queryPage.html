@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../css/oksub.css">
+    <link rel="stylesheet" href="../../css/dtree.css">
+    <link rel="stylesheet" href="../../font/dtree/dtreefont.css">
+
+</head>
+<body class="ok-body-scroll">
+<div class="ok-body">
+    <div class="layui-row layui-col-space10">
+        <form class="layui-form layui-col-md12 ">
+            <input type="hidden" name="projectId" th:value="${projectId}">
+
+            <div class="layui-form-item">
+                <div class="layui-input-inline">
+                    <input class="layui-input"  autocomplete="off" id="date" name="date"
+                           lay-key="1">
+                </div>
+
+                <div class="layui-input-inline">
+
+                    <select name="time" id="time" lay-filter="" class="layui-input">
+                        <option value="day" selected="">日</option>
+                        <option value="month" >月</option>
+                        <option value="season">季</option>
+                        <option value="year">年</option>
+                    </select>
+                </div>
+                <button class="layui-btn" lay-submit="" lay-filter="search">
+                    <i class="layui-icon layui-icon-search"></i>
+                </button>
+
+            </div>
+
+
+
+
+            <table class="layui-hide" id="permissionTable" lay-filter="tableFilter"></table>
+
+            <div id="main" style="width: 100%;height: 450%;margin: auto;"></div>
+        </form>
+    </div>
+</div>
+<!--js逻辑-->
+<script th:src="@{/lib/layui/layui.js}"  th:inline="javascript"></script>
+<script src="../../lib/echarts/echarts.min.js"></script>
+<script type="text/html" id="barDemo">
+
+    <a class="layui-btn layui-btn-xs" lay-event="edit">查看</a>
+
+</script>
+<script th:inline="javascript">
+    layui.use(["table", "laydate", "okLayer", "okUtils", "okMock","form"], function () {
+        let table = layui.table;
+        let laydate = layui.laydate;
+        let okUtils = layui.okUtils;
+        let form = layui.form;
+        var $ = layui.jquery;
+        let newDate = new Date();
+        let month = newDate.getMonth() + 1;
+        let day = newDate.getDate();
+        if (month < 10) {
+            month = "0" + month;
+        }
+        if (day < 10) {
+            day = "0" + day;
+        }
+        let nowTime = newDate.getFullYear() + "-" + month + "-" + day;
+        laydate.render({elem: '#startTime', type: "datetime",value: newDate.getFullYear() + "-" + month + "-" + "01" + " 00:00:01"});
+        laydate.render({elem: '#endTime', type: "datetime",value: nowTime + " 23:59:59"});
+        // 初始化表格
+        initPermissionTable({startTime:$("#startTime").val(),endTime:$("#endTime").val(),time:$("#time").val()});
+
+        // 初始化图形
+        initEcharts({startTime:$("#startTime").val(),endTime:$("#endTime").val(),time:$("#time").val()});
+
+        // 初始化表格方法
+        function initPermissionTable(data) {
+
+            okUtils.ajax("/manage-data/list/?projectId=" + [[${projectId}]], "post", data, true).done(function (response) {
+                table.render({
+                    elem: '#permissionTable',
+                    height: 'full-120',
+                    data: response.data,
+                    limit: 10,
+                    page: true,
+
+                    toolbar: "#toolbarTpl",
+                    size: "sm",
+                    cols: [
+                        [
+                            {type: "numbers", title: "序号", width: 70, sort: true, fixed: "left"},
+                            {field: "detail_name", title: "名称", width: 150},
+                            {field: "detail_value", title: "金额", templet: '<div>{{ d.detail_value}}</div>'}
+
+                        ]
+                    ],
+                    done: function (res, curr, count) {
+                        console.info(res, curr, count);
+                    }
+                });
+            });
+
+        }
+
+        // 绑定工具栏
+        table.on("tool(tableFilter)", function (obj) {
+            let data = obj.data;
+            switch (obj.event) {
+                case "query":
+                    query(data.projectId);
+                    break;
+            }
+        });
+
+        // 表单查询
+        form.on("submit(search)", function (data) {
+            initPermissionTable(data.field);
+            initEcharts(data.field);
+            return false;
+        });
+
+        // 基于准备好的dom，初始化echarts实例
+        function initEcharts(data) {
+            var myChart = echarts.init(document.getElementById('main'));
+
+            // 初始化
+            myChart.setOption(initOption("", "金额（元）"),true);
+
+            // 加载中
+            myChart.showLoading({
+                text: '拼命加载中...',
+                color: '#4cbbff',
+                textColor: '#4cbbff',
+            });
+
+            // 查询数据
+            $.post("/manage-data/echarts/?projectId=" + [[${projectId}]], data, function (response) {
+                let data = response.data;
+                // 无数据
+                if (data.length == 0 || data.series.length == 0 ) {
+                    myChart.showLoading({
+                        text: '暂无数据',
+                        color: '#FFFFFF',
+                        textColor: '#4cbbff'
+                    });
+                } else {
+                    // 隐藏loading
+                    myChart.hideLoading();
+                    // 使用刚指定的配置项和数据显示图表。
+                    option = loadingOption("", "金额（元）", data,true);
+                    myChart.setOption(option,true);
+                }
+
+            })
+
+        }
+
+        // 初始化option方法
+        function initOption(title, yAxisName) {
+            return option = {
+                title: {
+                    text: title
+                },
+                tooltip: {},
+                legend: {},
+                xAxis: {
+                    data: []
+                },
+                yAxis: {
+                    type: 'value',
+                    name: yAxisName
+                },
+                series: [{
+                    name: '',
+                    type: 'bar',
+                    data: []
+                }]
+            };
+        }
+
+        // 加载option方法
+        function loadingOption(title, yAxisName, data) {
+            return option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow',
+                        label: {
+                            show: true
+                        }
+                    }
+                },
+                toolbox: {
+                    show: true,
+                    feature: {
+                        mark: {show: true},
+                        dataView: {show: true, readOnly: false},
+                        magicType: {show: true, type: ['line', 'bar']},
+                        restore: {show: true},
+                        saveAsImage: {show: true}
+                    }
+                },
+                calculable: true,
+                legend: {
+                    data: data.legend,
+                    // data: ['Growth', '2020/4/7','2020/4/8','2020/4/9','2020/4/10','2020/4/11','2020/4/12'],
+                    itemGap: 5
+                },
+                grid: {
+                    top: '12%',
+                    left: '1%',
+                    right: '10%',
+                    containLabel: true
+                },
+                xAxis: [
+                    {
+                        type: 'category',
+                        data: data.xaxis,
+                        axisLabel: {
+                            interval: 0,
+                            rotate: 40
+                        },
+                        grid: {
+                            left: '10%',
+                            bottom: '35%'
+                        }
+
+                    }
+                ],
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: '金额（元）'
+                        // axisLabel: {
+                        //     formatter: function (a) {
+                        //         a = +a;
+                        //         return isFinite(a)
+                        //             ? echarts.format.addCommas(+a / 100)
+                        //             : '';
+                        //     }
+                        // }
+                    }
+                ],
+                dataZoom: [
+                    {
+                        show: true,
+                        start: 0,
+                        end: 100
+                    },
+                    {
+                        type: 'inside',
+                        start: 94,
+                        end: 100
+                    },
+                    {
+                        show: true,
+                        yAxisIndex: 0,
+                        filterMode: 'empty',
+                        width: 30,
+                        height: '80%',
+                        showDataShadow: false,
+                        left: '93%'
+                    }
+                ],
+                series: data.series
+
+            };
+        }
+
+    });
+</script>
+<!--行工具栏模板-->
+<script type="text/html" id="operationTpl">
+    <a href="javascript:" title="编辑" lay-event="edit"><i class="layui-icon">&#xe642;</i></a>
+    <a href="javascript:" title="删除" lay-event="del"><i class="layui-icon">&#xe640;</i></a>
+</script>
+
+<script type="text/html" id="typeTpl">
+
+    {{#  if(d.isDelete == 0){ }}
+    <span class="layui-btn layui-btn-normal layui-btn-xs">启用</span>
+    {{#  } else if(d.isDelete == -1){ }}
+    <span class="layui-btn layui-btn-warm layui-btn-xs">删除</span>
+    {{#  } else if(d.isDelete == 1) { }}
+    <span class="layui-btn layui-btn-danger layui-btn-xs">停止</span>
+    {{#  } }}
+</script>
+</body>
+</html>

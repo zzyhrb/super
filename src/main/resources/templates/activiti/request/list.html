@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>财务审批列表</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../css/oksub.css">
+    <link rel="stylesheet" href="../../css/dtree.css">
+    <link rel="stylesheet" href="../../font/dtree/dtreefont.css">
+
+</head>
+<body class="ok-body-scroll">
+<div class="ok-body">
+    <table class="layui-hide" id="permissionTable" lay-filter="tableFilter"></table>
+
+</div>
+<!--js逻辑-->
+<script th:src="@{/lib/layui/layui.js}"  th:inline="javascript"></script>
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-sm" lay-event="start">审批</a>
+</script>
+<script>
+    layui.use(["element", "table", "laydate", "okLayer", "tree", "okUtils", "okMock", "dtree"], function () {
+        let table = layui.table;
+        let laydate = layui.laydate;
+        let okUtils = layui.okUtils;
+        let okMock = layui.okMock;
+        let okLayer = layui.okLayer;
+
+
+        initPermissionTable();
+
+        function initPermissionTable() {
+            okUtils.ajax("/activity-request/list/", "post", null, true).done(function (response) {
+                let tb = table.render({
+                    elem: '#permissionTable',
+                    height: 'full-80',
+                    data: response.data,
+                    limit: 15,
+                    page: true,
+                    toolbar: "#toolbarTpl",
+                    size: "lg",
+                    cols: [
+                        [
+                            {type: "numbers", title: "序号", sort: true, width: 70},
+                            {field: "name", title: "审批名称"},
+                            {field: "createTime", title: "创建时间",templet:'<div>{{ layui.util.toDateString(d.createTime, "yyyy-MM-dd HH:mm:ss") }}</div>'},
+                            {field: "organName", title: "组织"},
+                            {field: "projectName", title: "项目名称"},
+                            {field: "date", title: "日期"},
+                            {
+                                title: "操作",
+                                templet: "#operationTpl",
+                                align: "center",
+                                fixed: "right",
+                                toolbar: '#barDemo'
+                            }
+                        ]
+                    ],
+                    done: function (res, curr, count) {
+                        console.info(res, curr, count);
+                    }
+                });
+            });
+
+        }
+
+        table.on("tool(tableFilter)", function (obj) {
+            let data = obj.data;
+            switch (obj.event) {
+                case "start":
+                    start(data.taskId, data.processInstanceId,data.applyFlag,data.tableName);
+                    break;
+            }
+        });
+        table.on("toolbar(tableFilter)", function (obj) {
+            switch (obj.event) {
+                case "add":
+                    addOrEditPage("", "add");
+                    break;
+            }
+        });
+
+        // 添加修改
+        function start(taskId, processInstanceId,applyFlag,tableName) {
+            okLayer.open("审批", "/activity-request/loadForm?taskId=" + taskId + "&processInstanceId=" + processInstanceId+"&applyFlag="+applyFlag+"&tableName="+tableName, "50%", "70%", null, function () {
+                initPermissionTable();
+            })
+        }
+
+
+    })
+    ;
+</script>
+</body>
+</html>

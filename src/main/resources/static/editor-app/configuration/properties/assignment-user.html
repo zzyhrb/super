@@ -1,0 +1,47 @@
+<div class="modal" ng-controller="KisBpmChoseUserCtrl">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="close()">&times;</button>
+                <h2 translate>审批人选择</h2>
+            </div>
+            <div class="modal-body">
+                <div class="row row-no-gutter">
+                    <div class="form-group">
+                        <label for="person">选择审批人</label>
+                        <div>
+                            <!-- <select id="person" name="person" class="form-control">
+                                <option ng-repeat="user in users" ng-value="user.userLoginName" ng-model="choose.value">【{{user.deptFullname}}】{{user.userRealName}}</option>
+                            </select> -->
+                            <table class="table table-bordered table-striped table-hover" style="text-align: center;" id="dataTable">
+			                    <thead style="text-align: center;">
+			                    <tr>
+			                      <th style="width: 7%;">操作</th>
+			                      <th>组织</th>
+                                    <th>角色名称</th>
+                                    <th>姓名</th>
+			                    </tr>
+			                    </thead>
+			                    <tbody>
+			                    <tr ng-repeat="user in users">
+			                      <td>
+			                         <input id="{{user.userId}}" type="checkbox" >
+			                      </td>
+			                      <td>{{user.organName}}</td>
+			                      <td>{{user.roleName}}</td>
+                                  <td>{{user.userRealName}}</td>
+
+                                </tr>
+			                    </tbody>
+			                  </table>
+                        </div>
+				    </div>
+				</div>
+            </div>
+            <div class="modal-footer">
+                <button ng-click="close()" class="btn btn-primary" translate>ACTION.CANCEL</button>
+                <button ng-click="save()" class="btn btn-primary" translate>ACTION.SAVE</button>
+            </div>
+        </div>
+    </div>
+</div>

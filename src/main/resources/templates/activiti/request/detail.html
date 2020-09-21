@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>详情</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="stylesheet" href="../../../css/oksub.css">
+
+  <style type="text/css">
+    .layui-table td {
+      cursor: pointer;
+    }
+
+    .layui-icon {
+      font-size: 30px;
+    }
+  </style>
+
+</head>
+<body>
+<div class="ok-body">
+  <!--form表单-->
+  <form class="layui-form  ok-form layui-col-md12">
+    <input class="layui-input" style="width: 380px;padding-left: 10px;margin-left: 10px;display: inline;"
+           type="text" name="createTime" autocomplete="off" id="createTime" placeholder="创建时间" readonly="readonly"
+           th:value="${#dates.format(tableList.get(1).get('create_time'), 'yyyy-MM-dd') +' ~ '+#dates.format(tableList.get(1).get('end_time'), 'yyyy-MM-dd')}">
+    <button type="button" class="layui-btn layui-btn-normal" onclick="print()">打印</button>
+
+    <table class="layui-table layui-form" id="tree-table" lay-size="sm"></table>
+
+
+  </form>
+</div>
+
+<!--js逻辑-->
+<script th:src="@{/lib/layui/layui.js}" th:inline="javascript"></script>
+
+<script type="text/javascript" th:inline="javascript">
+  let okLayer
+  let $
+  layui.config({
+    base: 'js/',
+  })
+  layui.use(['treeTable', 'layer', 'code', 'form', 'countUp', 'selectM', 'selectN', 'okLayer'], function () {
+    $ = layui.$
+    let form = layui.form,
+      layer = layui.layer,
+      treeTable = layui.treeTable
+    jqprint = layui.jqprint;
+    okLayer = layui.okLayer
+    let countUp = layui.countUp
+    selectM = layui.selectM
+    // 直接下载后url: './data/table-tree.json',这个配置可能看不到数据，改为data:[],获取自己的实际链接返回json数组
+    var re = treeTable.render({
+      elem: '#tree-table',
+      data: [[${tableList}]],
+      toolbar: true,
+      icon_key: 'title',
+      end: function (e) {
+        form.render()
+      },
+      cols: [
+        {
+          key: 'title',
+          title: '名称',
+          width: '100px',
+          template: function (item) {
+            if (item.level == 0) {
+              return '<span style="color:red;font-size: 20px;">' + item.title + '</span>'
+            } else if (item.level == 1) {
+              return '<span style="color:green;font-size: 20px;">' + item.title + '</span>'
+            } else if (item.level == 2) {
+              return '<span style="color:blue;font-size: 20px;">' + item.title + '</span>'
+            } else if (item.level == 3) {
+              return '<span style="color:black;font-size: 20px;">' + item.title + '</span>'
+            } else if (item.level == 4) {
+              return '<span style="color:#8A2BE2;font-size: 20px;">' + item.title + '</span>'
+            } else {
+              return '<span style="font-size: 20px;">' + item.title + '</span>'
+
+            }
+
+          }
+        },
+        {
+          key: 'detail_value',
+          title: '金额（元）',
+          width: '100px',
+          align: 'right',
+          template: function (item) {
+            if (item.level != 0) {
+              if (item.detail_value != null) {
+                if (item.is_end) {
+                  return "<span style='font-size: 20px'>" + retain(item.detail_value) + "</span>"
+
+                } else {
+                  return "<span style='font-size: 25px;color:blue;'>" +retain(item.detail_value) + "</span>"
+
+                }
+
+              } else {
+                return "-"
+              }
+            } else {
+              return "-"
+            }
+
+
+          }
+        },
+        {
+          key: 'column_detail',
+          title: '详细',
+          width: '100px',
+          align: 'center',
+          template: function (item) {
+            if (item.level != 0) {
+              if (item.column_detail === 0 || item.column_detail == null) {
+                return "-"
+              } else {
+                return "<input class='layui-btn layui-btn-xs' id='detail' type='button' value='详情' onclick='detailPage(\"" + item.detail_id + "\")'/>"
+              }
+            } else {
+              return "-"
+            }
+          }
+        }
+
+      ]
+
+    })
+
+
+    treeTable.openAll(re)
+    // 监听展开关闭
+    // treeTable.on('tree(flex)', function (data) {
+    //     layer.msg(JSON.stringify(data));
+    // })
+    // 监听checkbox选择
+
+  })
+
+  function detailPage(id) {
+    okLayer.open("明细", "/activity-request/dictDetail/page?detailId=" + id, "90%", "70%", null, function (item) {
+    })
+
+  }
+
+  function printTable()
+  {
+    var tableToPrint = document.getElementById('tree-table');//将要被打印的表格
+    var newWin= window.open("");//新打开一个空窗口
+    newWin.document.write(tableToPrint.outerHTML);//将表格添加进新的窗口
+    newWin.document.close();//在IE浏览器中使用必须添加这一句
+    newWin.focus();//在IE浏览器中使用必须添加这一句
+
+    newWin.print();//打印
+    newWin.close();//关闭窗口
+  }
+
+
+  function retain(num) {
+    num1 = num.toString()
+
+    let index = num1.indexOf('.')
+    num = formatCurrency(num1)
+    if (index !== -1) {
+      num = num.substring(0)
+    } else {
+      num = num.substring(0)
+    }
+    return num
+  }
+
+  function formatCurrency(num)
+  {
+    if(num)
+    {
+      //将num中的$,去掉，将num变成一个纯粹的数据格式字符串
+      num = num.toString().replace(/\$|\,/g,'');
+      //如果num不是数字，则将num置0，并返回
+      if(''==num || isNaN(num)){return 'Not a Number ! ';}
+      //如果num是负数，则获取她的符号
+      var sign = num.indexOf("-")> 0 ? '-' : '';
+      //如果存在小数点，则获取数字的小数部分
+      var cents = num.indexOf(".")> 0 ? num.substr(num.indexOf(".")) : '';
+      cents = cents.length>1 ? cents : '' ;//注意：这里如果是使用change方法不断的调用，小数是输入不了的
+      //获取数字的整数数部分
+      num = num.indexOf(".")>0 ? num.substring(0,(num.indexOf("."))) : num ;
+      //如果没有小数点，整数部分不能以0开头
+      if('' == cents){ if(num.length>1 && '0' == num.substr(0,1)){return 'Not a Number ! ';}}
+      //如果有小数点，且整数的部分的长度大于1，则整数部分不能以0开头
+      else{if(num.length>1 && '0' == num.substr(0,1)){return 'Not a Number ! ';}}
+      //针对整数部分进行格式化处理，这是此方法的核心，也是稍难理解的一个地方，逆向的来思考或者采用简单的事例来实现就容易多了
+      /*
+        也可以这样想象，现在有一串数字字符串在你面前，如果让你给他家千分位的逗号的话，你是怎么来思考和操作的?
+        字符串长度为0/1/2/3时都不用添加
+        字符串长度大于3的时候，从右往左数，有三位字符就加一个逗号，然后继续往前数，直到不到往前数少于三位字符为止
+       */
+      for (var i = 0; i < Math.floor((num.length-(1+i))/3); i++)
+      {
+        num = num.substring(0,num.length-(4*i+3))+','+num.substring(num.length-(4*i+3));
+      }
+      //将数据（符号、整数部分、小数部分）整体组合返回
+      return (sign + num + cents);
+    }
+
+  }
+</script>
+
+</body>
+</html>

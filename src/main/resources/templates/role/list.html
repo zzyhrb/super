@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" th:href="@{/css/oksub.css}" href="../../css/oksub.css">
+</head>
+<body>
+<div class="layui-fluid">
+    <fieldset class="layui-elem-field layui-field-title">
+        <legend>角色列表</legend>
+    </fieldset>
+    <div class="layui-row">
+        <div class="layui-col-md4">
+            <button class="layui-btn layui-btn-normal" type="button" id="addBtn">
+                <i class="layui-icon">&#xe608;</i> 添加
+            </button>
+        </div>
+    </div>
+    <table id="table" lay-filter="table"></table>
+</div>
+<script th:src="@{/lib/layui/layui.js}"  th:inline="javascript"></script>
+<script type="text/html" id="barFun">
+    <button type="button" class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</button>
+    <button type="button" class="layui-btn layui-btn-warm layui-btn-xs" lay-event="edit">修改</button>
+    <button type="button" class="layui-btn layui-btn-normal layui-btn-xs" lay-event="menu">权限</button>
+</script>
+<script th:inline="none">
+    layui.use(['table', 'layer', 'jquery'], function () {
+        const table = layui.table;
+        const $ = layui.$;
+        const layer = layui.layer;
+
+        //第一个实例
+        table.render({
+            elem: '#table'
+            , height: 'full-120'
+            , url: '/role/sys-role/list' //数据接口
+            , method: 'POST'
+            , page: false //开启分页
+            , cols: [[ //表头
+                {field: 'id', title: 'ID', width: 80, align: 'center', sort: true, fixed: 'left'}
+                , {
+                    field: 'tool',
+                    title: '操作',
+                    toolbar: '#barFun',
+                    width: 180,
+                    sort: false,
+                    align: 'center',
+                    fixed: 'left'
+                }
+                , {field: 'name', title: '角色名', sort: true}
+            ]]
+        });
+
+        //监听工具条
+        table.on('tool(table)', function (obj) { //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+            let data = obj.data; //获得当前行数据
+            let layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+            let tr = obj.tr; //获得当前行 tr 的DOM对象
+
+            if (layEvent === 'del') { //删除
+                layer.confirm('确定删除？', function (index) {
+                    //向服务端发送删除指令
+                    $.post('/role/sys-role/delete', {'id': data.id}, function (res) {
+                        if (res.code === '0') {
+                            obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+                            layer.msg(res.msg);
+                        } else {
+                            layer.msg(res.msg, {icon: 5, anim: 6});
+                        }
+                    });
+                    layer.close(index);
+                });
+            } else if (layEvent === 'edit') {
+                $.get('/role/sys-role/load/add/or/update', {'id': data.id}, function (html) {
+                    layer.open({
+                        type: 1,
+                        title: '修改角色',
+                        content: html
+                    });
+                });
+            } else if (layEvent === 'menu') {
+                // 权限
+                layer.open({
+                    type: 2
+                    , title: '角色权限设置'
+                    , area: ['50%', '50%']
+                    , content: '/authority/load/add/or/update?id=' + data.id
+                });
+            }
+        });
+
+        // 监听添加按钮
+        $('#addBtn').on('click', function () {
+            $.get('/role/sys-role/load/add/or/update', function (html) {
+                layer.open({
+                    type: 1,
+                    title: '添加角色',
+                    content: html
+                });
+            });
+        });
+    });
+</script>
+</body>
+</html>

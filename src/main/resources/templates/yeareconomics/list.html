@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../css/oksub.css">
+    <link rel="stylesheet" href="../../css/dtree.css">
+    <link rel="stylesheet" href="../../font/dtree/dtreefont.css">
+</head>
+<body class="ok-body-scroll">
+<div class="ok-body">
+    <div id="main" style="width: 100%;height: 600%;margin: auto;"></div>
+</div>
+<!--js逻辑-->
+<script th:src="@{/lib/layui/layui.js}" th:inline="javascript"></script>
+<script src="../../lib/echarts/echarts.min.js"></script>
+<script th:inline="javascript">
+    layui.use(["element", "table", "laydate", "okLayer", "tree", "okUtils", "okMock", "dtree", "form"], function () {
+        var $ = layui.jquery;
+        // 初始化图形
+        initEcharts();
+
+        // 基于准备好的dom，初始化echarts实例
+        function initEcharts() {
+            var myChart = echarts.init(document.getElementById('main'));
+
+            // 图形设置option
+            myChart.setOption(initOption("直属事业单位经济情况"), true);
+
+            // 加载样式
+            myChart.showLoading({
+                text: '玩命加载中...',
+                color: '#4cbbff',
+                textColor: '#4cbbff',
+
+            });
+
+            // 查询图形
+            $.post("/year-economics/echarts/", "post", function (response) {
+                let data = response.data;
+                if (data.timeline.length == 0 || data == null || data.timeline == null || data.timeline.length == null) {
+                    myChart.showLoading({
+                        text: '暂无数据',
+                        color: '#FFFFFF',
+                        textColor: '#4cbbff'
+                    });
+                } else {
+                    myChart.hideLoading();
+                    option = loadingOption("数据来自黑龙江省总工会", data);
+                    myChart.setOption(option, true);
+                }
+
+            })
+
+        }
+
+        // 返回处理过后的series
+        function series(series, name) {
+            if (series.length > 0) {
+                series.push({
+                    name: name,
+                    type: 'pie',
+                    radius: '28%',
+                    center: ['50%', '35%'],
+                    label: {
+                        formatter: '{a|{a}}{abg|}\n{hr|}\n  {b|{b}：}{c}  {per|{d}%}  ',
+                        backgroundColor: '#eee',
+                        borderColor: '#aaa',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        // shadowBlur:3,
+                        // shadowOffsetX: 2,
+                        // shadowOffsetY: 2,
+                        // shadowColor: '#999',
+                        // padding: [0, 7],
+                        rich: {
+                            a: {
+                                color: '#999',
+                                lineHeight: 22,
+                                align: 'center'
+                            },
+                            // abg: {
+                            //     backgroundColor: '#333',
+                            //     width: '100%',
+                            //     align: 'right',
+                            //     height: 22,
+                            //     borderRadius: [4, 4, 0, 0]
+                            // },
+                            hr: {
+                                borderColor: '#aaa',
+                                width: '100%',
+                                borderWidth: 0.5,
+                                height: 0
+                            },
+                            b: {
+                                fontSize: 16,
+                                lineHeight: 33
+                            },
+                            per: {
+                                color: '#eee',
+                                backgroundColor: '#334455',
+                                padding: [2, 4],
+                                borderRadius: 2
+                            }
+                        }
+                    },
+                    z: 25
+                })
+            }
+            return series;
+        }
+
+        // 初始化option方法
+        function initOption(title) {
+            return option = {
+                title: {
+                    text: title
+                },
+
+                legend: {},
+                xAxis: {
+                    data: []
+                },
+                yAxis: {
+                    ype: 'value',
+                    name: '金额（元）'
+                },
+                series: [{
+                    name: '',
+                    type: 'bar',
+                    data: []
+                }]
+            };
+        }
+
+
+        // 加载option方法
+        function loadingOption(title, data) {
+            return option = {
+                baseOption: {
+                    timeline: {
+                        axisType: 'category',
+                        autoPlay: true,
+                        playInterval: 1000,
+                        bottom: 5,
+                        data: data.timeline,
+                        label: {
+                            formatter: function (s) {
+                                return (new Date(s)).getFullYear();
+                            }
+                        }
+                    },
+                    title: {
+                        subtext: title
+                    },
+                    tooltip: {},
+                    legend: {
+                        left: 'right',
+                        data: data.legend
+                    },
+                    calculable: true,
+                    grid: {
+                        top: 80,
+                        bottom: 100,
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'shadow',
+                                label: {
+                                    show: true,
+                                    formatter: function (params) {
+                                        return params.value.replace('\n', '');
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    xAxis: [
+                        {
+                            'type': 'category',
+                            'axisLabel': {'interval': 0},
+                            'data': data.xaxis,
+                            grid: {
+                                left: '10%',
+                                bottom: '1%'
+                            },
+                            splitLine: {show: false},
+                            axisLabel: {
+                                interval: 0,
+                                textStyle: {
+                                    fontSize: 13  //刻度大小
+                                },
+                                formatter: function (params) {
+                                    var newParamsName = "";
+                                    var paramsNameNumber = params.length;
+                                    var provideNumber = 6;
+                                    var rowNumber = Math.ceil(paramsNameNumber / provideNumber);
+                                    if (paramsNameNumber > provideNumber) {
+                                        for (var p = 0; p < rowNumber; p++) {
+                                            var tempStr = "";
+                                            var start = p * provideNumber;
+                                            var end = start + provideNumber;
+                                            if (p == rowNumber - 1) {
+                                                tempStr = params.substring(start, paramsNameNumber);
+                                            } else {
+                                                if (p > 2) {
+                                                    tempStr = "...";
+                                                    newParamsName += tempStr;
+                                                    break;
+                                                } else {
+                                                    tempStr = params.substring(start, end);
+                                                    if (p < 2) {
+                                                        tempStr += "\n";
+                                                    }
+                                                }
+                                            }
+                                            newParamsName += tempStr;
+                                        }
+
+                                    } else {
+                                        newParamsName = params;
+                                    }
+                                    return newParamsName
+                                }
+                            }
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            type: 'value',
+                            name: '金额（元）'
+                        }
+                    ],
+                    series: data.series
+                },
+                options: data.options
+            };
+        }
+    });
+
+</script>
+</body>
+</html>

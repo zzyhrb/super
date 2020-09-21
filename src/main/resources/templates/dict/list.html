@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>权限列表</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../css/oksub.css">
+    <link rel="stylesheet" href="../../css/dtree.css">
+    <link rel="stylesheet" href="../../font/dtree/dtreefont.css">
+
+</head>
+<body class="ok-body-scroll">
+    <div class="ok-body">
+        <!--面包屑导航区域-->
+        <!--<div class="ok-body-breadcrumb">
+                <span class="layui-breadcrumb">
+                    <a><cite>首页</cite></a>
+                    <a><cite>常用页面</cite></a>
+                    <a><cite>权限列表</cite></a>
+                </span>
+            <a class="layui-btn layui-btn-sm" href="javascript:location.replace(location.href);" title="刷新">
+                <i class="layui-icon layui-icon-refresh"></i>
+            </a>
+        </div>
+        &lt;!&ndash;模糊搜索区域&ndash;&gt;
+        <div class="layui-row">
+            <form class="layui-form layui-col-md12 ok-search">
+                <input class="layui-input" placeholder="开始日期" autocomplete="off" id="startTime">
+                <input class="layui-input" placeholder="截止日期" autocomplete="off" id="endTime">
+                <input class="layui-input" placeholder="请输入权限名" autocomplete="off">
+                <button class="layui-btn" lay-submit="" lay-filter="search">
+                    <i class="layui-icon layui-icon-search"></i>
+                </button>
+            </form>
+        </div>-->
+
+<!--        <div class="layui-row">-->
+<!--            <div class="layui-col-md5">-->
+<!--                <div id="permissionTree"></div>-->
+<!--            </div>-->
+<!--            <div class="layui-col-md7">-->
+<!--                <table class="layui-hide" id="permissionTable" lay-filter="tableFilter"></table>-->
+<!--            </div>-->
+<!--        </div>-->
+
+
+        <table class="layui-hide" id="permissionTable" lay-filter="tableFilter"></table>
+
+    </div>
+    <!--js逻辑-->
+    <script th:src="@{/lib/layui/layui.js}"  th:inline="javascript"></script>
+    <script type="text/html" id="barDemo" th:inline="javascript">
+        <a class="layui-btn layui-btn-primary layui-btn-sm" lay-event="detail">列表</a>
+
+        {{#  if([[${session.userInfo.roleId}]] == 1){ }}
+        <a class="layui-btn layui-btn-sm" lay-event="edit">编辑</a>
+        <a class="layui-btn layui-btn-sm layui-btn-danger" lay-event="del">删除</a>
+        {{#  }}}
+    </script>
+    <script>
+        layui.use(["element", "table", "laydate", "okLayer", "tree", "okUtils", "okMock", "dtree"], function () {
+            let table = layui.table;
+            let laydate = layui.laydate;
+            let okUtils = layui.okUtils;
+            let okMock = layui.okMock;
+            let okLayer = layui.okLayer;
+
+
+            initPermissionTable();
+
+            function initPermissionTable() {
+                okUtils.ajax("/dict/list/", "post", null, true).done(function (response) {
+                    let tb = table.render({
+                        elem: '#permissionTable',
+                        height: 'full-40',
+                        data: response.data,
+                        limit: 15,
+                        page: true,
+                        toolbar: "#toolbarTpl",
+                        size: "lg",
+                        cols: [
+                            [
+                                {type:"numbers", title: "序号", sort: true, fixed: "left",width:70},
+                                {field: "dictName", title: "字典名称"},
+                                {field: "dictCode", title: "字典编码"},
+                                {field: "userRealName", title: "创建人"},
+                                {field: "dictDescript", title: "字典描述"},
+                                {
+                                    field: "createTime",
+                                    title: "创建时间",
+                                    templet: '<div>{{ layui.util.toDateString(d.createTime, "yyyy-MM-dd HH:mm:ss") }}</div>',
+                                    minWidth: 150
+                                },
+                                {
+                                    title: "操作",
+                                    templet: "#operationTpl",
+                                    align: "center",
+                                    fixed: "right",
+                                    toolbar: '#barDemo'
+                                }
+                            ]
+                        ],
+                        done: function (res, curr, count) {
+                            console.info(res, curr, count);
+                        }
+                    });
+                });
+
+            }
+
+            table.on("tool(tableFilter)", function (obj) {
+                let data = obj.data;
+                switch (obj.event) {
+                    case "add":
+                        addOrEditPage(data.dictId, "add");
+                        break;
+                    case "edit":
+                        addOrEditPage(data.dictId, "edit");
+                        break;
+                    case "detail":
+                        detail(data.dictId);
+                        break;
+                    case "del":
+                        del(data.dictId);
+                        break;
+                }
+            });
+            table.on("toolbar(tableFilter)", function (obj) {
+                switch (obj.event) {
+                    case "add":
+                        addOrEditPage("", "add");
+                        break;
+                }
+            });
+
+            // 添加修改
+            function addOrEditPage(dictId, type) {
+                okLayer.open(type == "add" ? "添加" : "编辑", "/dict/addOrEditPage?dictId=" + dictId + "&type=" + type, "90%", "90%", null, function () {
+                    initPermissionTable();
+                })
+            }
+
+            // 列表
+            function detail(dictId) {
+                okLayer.open("列表", "/dict/detail/?parentId=" + dictId, "90%", "90%", null, function () {
+                })
+            }
+
+            // 删除
+            function del(dictId) {
+                okLayer.confirm("确定要删除吗？", function () {
+                    okUtils.ajax("/dict/delete/", "post", {dictId: dictId}, true).done(function (response) {
+                        layer.msg(response.msg, {icon: 1, time: okLayer.time}, function () {
+                            initPermissionTable();
+                        });
+                    }).fail(function (error) {
+                    });
+                })
+
+            }
+        })
+    </script>
+    <!-- 头工具栏模板 -->
+    <script type="text/html" id="toolbarTpl">
+        <div class="layui-btn-container">
+            <button class="layui-btn layui-btn-lg" lay-event="add">添加</button>
+        </div>
+    </script>
+
+</body>
+</html>

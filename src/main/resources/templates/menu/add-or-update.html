@@ -1,0 +1,94 @@
+<div class="layui-fluid" xmlns:th="http://www.thymeleaf.org">
+    <form class="layui-form" action="/menu/sys-menu/save" method="post">
+        <input type="hidden" name="parentId" th:if="${parentId != null}" th:value="${parentId}">
+        <input type="hidden" name="id" th:if="${data != null}"
+               th:value="${data != null && data.id != null ? data.id : ''}">
+        <hr>
+        <div class="layui-form-item">
+            <label class="layui-form-label">菜单名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="title" placeholder="菜单名称" class="layui-input" lay-verify="required"
+                       maxlength="20" th:value="${data != null && data.title != null ? data.title : ''}">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">请求路径</label>
+            <div class="layui-input-block">
+                <input type="text" name="url" placeholder="请求路径" class="layui-input" maxlength="200"
+                       th:value="${data != null && data.url != null ? data.url : ''}">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">菜单图标</label>
+            <div class="layui-input-block layui-col-space5">
+                <input type="text" name="icon" placeholder="菜单图标" class="layui-input" lay-verify="required"
+                       maxlength="30" th:value="${data != null && data.icon != null ? data.icon : ''}" id="menuBtn"
+                       readonly>
+                <div class="menuIcon"></div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">菜单排序</label>
+            <div class="layui-input-block">
+                <input type="text" name="sort" placeholder="数字（从0开始）" class="layui-input" lay-verify="required"
+                       maxlength="2" th:value="${data != null && data.sort != null ? data.sort : ''}">
+            </div>
+        </div>
+        <hr>
+        <div class=" layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="*">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+<script>
+    let $;
+    layui.use(['form', 'jquery'], function () {
+        const form = layui.form;
+        $ = layui.jquery;
+        form.render();
+        const iconArray = [
+            'xe66d;'
+            , 'xe678;'
+            , 'xe679;'
+            , 'xe672;'
+            , 'xe702;'
+            , 'xe66e;'
+            , 'xe68e;'
+            , 'xe674;'
+            , 'xe66c;'
+            , 'xe66a;'
+            , 'xe667;'
+            , 'xe7ae;'
+            , 'xe665;'
+            , 'xe664;'
+            , 'xe716;'
+            , 'xe656;'
+            , 'xe653;'
+            , 'xe663;'
+            , 'xe705;'
+            , 'xe66f;'
+            , 'xe614;'
+            , 'xe60a;'
+            , 'xe65e;'
+            , 'xe628;'
+            , 'xe631;'
+            , 'xe63c;'
+            , 'xe638;'
+        ];
+
+        $('.menuIcon').empty();
+        iconArray.forEach(icon => {
+            $('.menuIcon').append(`<div class="layui-col-sm1" onclick="checkIcon(\'${icon}\');"><i class="layui-icon">&#${icon}</i></div>`);
+        });
+
+    });
+
+    function checkIcon(icon) {
+        $("#menuBtn").val('&#' + icon)
+    }
+
+
+</script>

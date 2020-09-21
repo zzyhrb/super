@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../css/oksub.css">
+    <link rel="stylesheet" href="../../css/dtree.css">
+    <link rel="stylesheet" href="../../font/dtree/dtreefont.css">
+    <style>
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="ok-body-scroll">
+<div class="ok-body">
+    <!--面包屑导航区域-->
+    <!--<div class="ok-body-breadcrumb">
+            <span class="layui-breadcrumb">
+                <a><cite>首页</cite></a>
+                <a><cite>常用页面</cite></a>
+                <a><cite>权限列表</cite></a>
+            </span>
+        <a class="layui-btn layui-btn-sm" href="javascript:location.replace(location.href);" title="刷新">
+            <i class="layui-icon layui-icon-refresh"></i>
+        </a>
+    </div>
+    &lt;!&ndash;模糊搜索区域&ndash;&gt;
+    <div class="layui-row">
+        <form class="layui-form layui-col-md12 ok-search">
+            <input class="layui-input" placeholder="开始日期" autocomplete="off" id="startTime">
+            <input class="layui-input" placeholder="截止日期" autocomplete="off" id="endTime">
+            <input class="layui-input" placeholder="请输入权限名" autocomplete="off">
+            <button class="layui-btn" lay-submit="" lay-filter="search">
+                <i class="layui-icon layui-icon-search"></i>
+            </button>
+        </form>
+    </div>-->
+
+    <!--        <div class="layui-row">-->
+    <!--            <div class="layui-col-md5">-->
+    <!--                <div id="permissionTree"></div>-->
+    <!--            </div>-->
+    <!--            <div class="layui-col-md7">-->
+    <!--                <table class="layui-hide" id="permissionTable" lay-filter="tableFilter"></table>-->
+    <!--            </div>-->
+    <!--        </div>-->
+
+
+    <div class="layui-row">
+        <form class="layui-form layui-col-md12 ok-search">
+            <input class="layui-input" placeholder="字典编码" autocomplete="off" lay-key="1" name="dictCode">
+            <input class="layui-input" placeholder="字典名称" autocomplete="off" lay-key="2" name="dictName">
+            <button class="layui-btn" lay-submit="" lay-filter="search">
+                <i class="layui-icon layui-icon-search"></i>
+            </button>
+        </form>
+    </div>
+    <table class="layui-hide" id="permissionTable" lay-filter="tableFilter"></table>
+
+</div>
+<!--js逻辑-->
+<script th:src="@{/lib/layui/layui.js}"  th:inline="javascript"></script>
+<script type="text/html" id="barDemo">
+    <input name="{{d.dictId}}" value="" type="hidden" class="layui-input">
+    <input name="value" type="number" style="text-align: right;font-size: 30px" class="layui-input">
+
+</script>
+<script th:inline="javascript">
+    layui.use(["element", "table", "laydate", "okLayer", "okUtils", "form"], function () {
+        let table = layui.table;
+        let laydate = layui.laydate;
+        let okUtils = layui.okUtils;
+        let okLayer = layui.okLayer
+        let form = layui.form;
+        $ = layui.jquery;
+
+        laydate.render({elem: '#startTime', type: "datetime"});
+        laydate.render({elem: '#endTime', type: "datetime"});
+        initPermissionTable()
+
+        function initPermissionTable(data) {
+            okUtils.ajax("/dict/list/?parentId=" + [[${dictId}]], "post", data, true).done(function (response) {
+                table.render({
+                    elem: '#permissionTable',
+                    height: 'full-120',
+                    data: response.data,
+                    limit: 20,
+
+                    page: true,
+                    toolbar: "#toolbarTpl",
+                    size: "lg",
+                    cols: [
+                        [
+                            {type: "checkbox", fixed: "left"},
+                            {type: "numbers", align: "center", title: "序号", width: 70, fixed: "left"},
+                            {field: "dictCode", title: "字典编码"},
+                            {field: "dictName", title: "字典名称"},
+                            {field: "userRealName", title: "创建人"},
+                            {field: "organName", title: "所属组织"},
+
+                            {
+                                title: "创建时间",
+                                align: "center",
+                                templet: '<div>{{ layui.util.toDateString(d.createTime, "yyyy-MM-dd HH:mm:ss") }}</div>'
+                            },
+
+
+                            {
+                                field: 'value',
+                                title: "金额",
+                                width: 300,
+                                align: "right",
+                                toolbar: '#barDemo'
+                            }
+                        ]
+                    ],
+                    done: function (res, curr, count) {
+                        parent.layui.$("form").children("input[name='" + [[${treeId}]] + "dictId']").addClass("one");
+                        parent.layui.$("form").children("input[name='" + [[${treeId}]] + "value']").addClass("one");
+                        parent.layui.$("form").children("input[name='" + [[${treeId}]] + "dictId']").each(function (i, obj) {
+
+                            $("input[name='" + $(obj).val() + "']").next().val(parent.layui.$("form").children("input[name='" + [[${treeId}]] + "value']")[i].value)
+                            for (let i = 0; i < res.data.length; i++) {
+                                if (res.data[i].dictId == $(obj).val()) {
+                                    var index = res.data[i]['LAY_TABLE_INDEX'];
+                                    res.data[i].LAY_CHECKED = true; // 设置选中
+                                    $('tr[data-index=' + index + '] input[type="checkbox"]').prop('checked', true);
+                                    $('tr[data-index=' + index + '] input[type="checkbox"]').next().addClass('layui-form-checked');
+                                }
+                            }
+                        })
+                        $("input[name='value']").bind('keydown',function(event){
+                            if(event.keyCode == "13") {
+                                $(this).parents("tr").next().find("input[name='value']").focus()
+                            }
+                        });
+
+                        // $("td").on("click", function () {
+                        //     if ($(this).attr("data-off")) {
+                        //         let val = $(this).find("input[name='value']").val();
+                        //         if ($(this).children("input[class='layui-input layui-table-edit']").length == 0) {
+                        //             $(this).append("<input class='layui-input layui-table-edit' type='number' value='" + val + "'>");
+                        //             $('input[class="layui-input layui-table-edit"]').focus();
+                        //             let oVal = $('input[class="layui-input layui-table-edit"]').val();
+                        //             $('input[class="layui-input layui-table-edit"]').val("");
+                        //             $('input[class="layui-input layui-table-edit').val(oVal);
+                        //             $('input[class="layui-input layui-table-edit').scrollLeft=700;
+                        //
+                        //             $('input[class="layui-input layui-table-edit"]').blur(function() {
+                        //                 alert(2222)
+                        //             });
+                        //         }
+                        //     }
+                        // })
+                    }
+                });
+            });
+
+        }
+
+        table.on('checkbox(tableFilter)', function (obj) {
+            if (obj.checked) {
+                parent.layui.$("form").children("." + obj.data.dictId).addClass("one");
+            } else {
+                parent.layui.$("form").children("." + obj.data.dictId).removeClass("one");
+            }
+
+
+        });
+
+
+        // 表单查询
+        form.on("submit(search)", function (data) {
+            initPermissionTable(data.field)
+            return false;
+        });
+
+        table.on("toolbar(tableFilter)", function (obj) {
+            switch (obj.event) {
+                case "batchSubmit":
+                    batchSubmit(obj);
+                    break;
+            }
+        });
+
+
+        function batchSubmit(obj) {
+            var checkStatus = table.checkStatus(obj.config.id)
+                , data = checkStatus.data;
+
+            okLayer.confirm("确定批量提交吗？", function () {
+                parent.layui.$("form").children("input[name='" + [[${treeId}]] + "dictId']").not(".one").remove();
+                parent.layui.$("form").children("input[name='" + [[${treeId}]] + "value']").not(".one").remove();
+                let countVal = 0;
+                for (let i = 0; i < data.length; i++) {
+                    let value = $("input[name='" + data[i].dictId + "']").next("input[name='value']").val();// 获取选中金额
+                    if (value == "") {
+                        value = 0;
+                    }
+                    countVal =  parent.retain(parent.accAdd(countVal,value),2)
+                    if (parent.layui.$("." + data[i].dictId).length == 0) {
+                        parent.layui.$("form").append("<input class='one " + data[i].dictId + "' name=\"" + [[${treeId}]] + "dictId\" value=\"" + data[i].dictId + "\" type=\"hidden\" >");
+                        parent.layui.$("form").append("<input class='one " + data[i].dictId + "' name=\"" + [[${treeId}]] + "value\" value=\"" + parent.retain(value,2) + "\" type=\"hidden\" >");
+                    } else {
+                        parent.layui.$("." + data[i].dictId).filter("input[name='" + [[${treeId}]] + "value']").val(parent.retain(value,2));
+                    }
+
+
+                }
+                countUpFu(parent.layui.countUp, parent.layui.$("input[value='" + [[${treeId}]] + "']").parent("td"), parent.retain(countVal,2));
+                layer.close(layer.index);
+                // parent.layer.close(parent.layer.getFrameIndex(window.name));
+                okLayer.greenTickMsg("提交成功！");
+                return true;
+            })
+
+        }
+
+
+    });
+
+    function countUpFu(countUp, obj, dataValue) {
+        $(obj).children("input[name='detailValue']").val(dataValue);
+        $(obj).children("span[id='span']").text(dataValue);
+        $(obj).children("span[id='span']").css("font-size","20px")
+        // var count_up = new countUp({
+        //     target: $(obj).children("span"),
+        //     startVal: 0, //目标开始的值，默认值为0
+        //     endVal: dataValue, //到达目标值,默认值为元素的值
+        //     decimals: 2, //小数位数，默认值为0
+        //     duration: 3 //动画持续时间为秒，默认值为2
+        // });
+        // count_up.start();
+    }
+
+
+
+
+</script>
+
+<!-- 头工具栏模板 -->
+<script type="text/html" id="toolbarTpl">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm layui-btn-normal" lay-event="batchSubmit">批量提交</button>
+    </div>
+</script>
+
+</body>
+</html>

@@ -1,0 +1,103 @@
+<div class="layui-fluid" xmlns:th="http://www.thymeleaf.org">
+    <form class="layui-form" lay-filter="frm">
+
+        <input type="hidden" name="userId"
+               th:value="${null != userAccount && null != userAccount.userId ? userAccount.userId : ''}">
+        <input type="hidden" name="id"
+               th:value="${null != userAccount && null != userAccount.id ? userAccount.id : ''}">
+        <input type="hidden" name="type" th:value="${type}">
+
+        <hr>
+        <div class="layui-form-item" th:if="${'add' == type}">
+            <label class="layui-form-label">用户代码</label>
+            <div class="layui-input-block">
+                <input type="text" name="userCode" placeholder="用户代码" class="layui-input" autocomplete="off"
+                       lay-verify="required|number"
+                       th:value="${null != data && null != data.userCode ? data.userCode : ''}" maxlength="11">
+            </div>
+        </div>
+
+
+        <div class="layui-form-item" th:if="${null == data}">
+            <label class="layui-form-label">密码</label>
+            <div class="layui-input-block">
+                <input type="password" name="userPassword" placeholder="密码" class="layui-input"
+                       autoComplete="new-password"
+                       lay-verify="required|pass">
+            </div>
+        </div>
+        <hr>
+        <div class=" layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="*">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+    <script th:inline="javascript">
+        layui.use(['form', 'jquery', 'layer', 'okUtils', 'okLayer'], function () {
+            const form = layui.form;
+            const $ = layui.$;
+            const layer = layui.layer;
+            const okUtils = layui.okUtils;
+            const okLayer = layui.okLayer;
+
+            let flag = false;
+
+            // 加载表单
+            form.render();
+            // 回显表单初始值
+            //给表单赋值
+            if (null !== [[${data}]]) {
+                form.val("frm", { //formTest 即 class="layui-form" 所在元素属性 lay-filter="" 对应的值
+                    roleId: [[${data?.roleId}]]
+                    , organId: [[${data?.organId}]]
+                });
+            }
+
+            form.on('submit(*)', function (data) {
+                $.ajax({
+                    url: '/user/userAccount/checkAccount',
+                    type: 'post',
+                    async: false,
+                    data: {
+                        'userCode': data.field.userCode,
+                        'userId': [[${data?.userId}]]
+                    },
+                    success: function (result) {
+                        if (result.count > 0 && [[${type}]] === "add") {
+                            flag = true;
+                            layer.msg('用户代码已存在', {icon: 5, anim: 6});
+                        } else if (result.count > 1 && [[${type}]] === "edit") {
+                            flag = true;
+                            layer.msg('用户代码已存在', {icon: 5, anim: 6});
+                        } else {
+                            flag = false;
+                        }
+                    }
+                });
+                form.verify({
+                    pass: [
+                        /^[\S]{6,12}$/
+                        , '密码必须6到12位，且不能出现空格'
+                    ]
+                });
+
+                if (flag) {
+                    return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+                } else {
+                    okUtils.ajax("/user/userAccount/addOrEdit", "post", data.field, true).done(function (response) {
+                        okLayer.greenTickMsg([[${type}]] == "add" ? "添加成功" : "修改成功", function () {
+                            layer.closeAll();
+                        });
+                    }).fail(function (error) {
+                    });
+
+                }
+
+                return false
+            });
+
+        });
+    </script>
+</div>

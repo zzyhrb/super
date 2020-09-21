@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans" xmlns:th="http://www.thymeleaf.org" class="page-fill">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}">--</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="shortcut icon" th:href="@{/images/2cf5e0fe9925bc31a3e9a78456df8db1cb137072.jpg}" type="image/x-icon"/>
+    <link rel="stylesheet" th:href="@{/css/oksub.css}" href="../css/oksub.css"/>
+    <link rel="stylesheet" th:href="@{/css/okadmin.css}" href="css/okadmin.css">
+
+</head>
+<body class="page-fill" >
+<input id="loginFlag" type="hidden">
+<div class="page-fill" id="login" style="background-color: #F0F0F0;">
+    <div style="background-image: url('/images/login-bg-top.png');position: fixed;top: 0;left: 0;width: 488px;height: 160px;background-repeat:no-repeat;"></div>
+    <div style="text-align: center;width: 100%;font-size: 26px;position: fixed;top: 21%;right:11%;font-family : 宋体;"><h1>黑龙江省总工会直属事业单位经营监督分析系统</h1></div>
+    <form class="layui-form" style="top: 80%; padding: 40px 100px;width: 500px;box-shadow: none;background:url('../images/formbg.png') no-repeat;background-size: 96% 98%;">
+        <div class="layui-form-item" style="left:-12%;">
+            <label class="layui-form-label" style="color: black;"><strong>用户代码</strong></label>
+            <div class="layui-input-block">
+                <input type="text" style="width: 226px;" lay-verify="required" name="userCode" placeholder="请输入用户代码" autocomplete="off"
+                       id="userLoginName" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item" style="left:-12%;">
+            <label class="layui-form-label" style="color: black;"><strong>用户密码</strong></label>
+            <div class="layui-input-block" >
+                <input type="password" style="width: 226px;" lay-verify="required|password" name="userPassword" placeholder="请输入密码"
+                       autocomplete="off" id="userPassword" class="layui-input">
+            </div>
+        </div>
+
+<!--        <div class="layui-form-item input-item captcha-box">-->
+<!--            <label for="captcha">验证码</label>-->
+<!--            <input type="text" lay-verify="required|captcha" name="captcha" placeholder="请输入验证码" autocomplete="off"-->
+<!--                   id="captcha" maxlength="4" class="layui-input">-->
+<!--            <div class="img ok-none-select" id="captchaImg"></div>-->
+<!--        </div>-->
+        <div class="layui-form-item">
+            <button class="layui-btn layui-block" lay-filter="login" lay-submit="">登录</button>
+        </div>
+    </form>
+</div>
+<!--js逻辑-->
+<script th:src="@{/lib/layui/layui.js}"  th:inline="javascript"></script>
+<script>
+
+    layui.use(["form", "okGVerify", "okUtils", "okLayer"], function () {
+        let form = layui.form;
+        let $ = layui.jquery;
+        let okGVerify = layui.okGVerify;
+        let okUtils = layui.okUtils;
+        let okLayer = layui.okLayer;
+
+        /**
+         * 初始化验证码
+         */
+        let verifyCode = new okGVerify("#captchaImg");
+
+        /**
+         * 数据校验
+         */
+        form.verify({
+            password: [/^[\S]{6,12}$/, "密码必须6到12位，且不能出现空格"],
+            captcha: function (val) {
+                if (verifyCode.validate(val) !== "true") {
+                    return verifyCode.validate(val)
+                }
+            }
+        });
+
+        /**
+         * 表单提交
+         */
+        form.on("submit(login)", function (data) {
+            okUtils.ajax("/login", "post", data.field, true).done(function (response) {
+                if (response.code === "0") {
+                    okLayer.greenTickMsg(response.msg, function () {
+                        $.ajax({
+                            url: okUtils.baseUrl + "/index",
+                            type: "get",
+                            success: function (response) {
+                                $("body").html(response);
+                            }
+
+                        })
+                    })
+
+                }
+                // okLayer.greenTickMsg(response.msg, function () {
+                // })
+            }).fail(function (error) {
+            });
+            return false;
+        });
+
+        /**
+         * 表单input组件单击时
+         */
+        $("#login .input-item .layui-input").click(function (e) {
+            e.stopPropagation();
+            $(this).addClass("layui-input-focus").find(".layui-input").focus();
+        });
+
+        /**
+         * 表单input组件获取焦点时
+         */
+        $("#login .layui-form-item .layui-input").focus(function () {
+            $(this).parent().addClass("layui-input-focus");
+        });
+
+        /**
+         * 表单input组件失去焦点时
+         */
+        $("#login .layui-form-item .layui-input").blur(function () {
+            $(this).parent().removeClass("layui-input-focus");
+            if ($(this).val() !== "") {
+                $(this).parent().addClass("layui-input-active");
+            } else {
+                $(this).parent().removeClass("layui-input-active");
+            }
+        })
+    });
+</script>
+</body>
+</html>

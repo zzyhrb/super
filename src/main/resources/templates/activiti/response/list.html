@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>财务审批列表</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../css/oksub.css">
+    <link rel="stylesheet" href="../../css/dtree.css">
+    <link rel="stylesheet" href="../../font/dtree/dtreefont.css">
+
+</head>
+<body class="ok-body-scroll">
+<div class="layui-fluid">
+    <fieldset class="layui-elem-field layui-field-title">
+        <legend>已上报信息</legend>
+    </fieldset>
+
+    <div class="layui-row">
+
+
+        <form class="layui-form layui-col-md12 ">
+            <blockquote class="layui-elem-quote layui-quote-nm">
+
+                <div class="layui-form-item">
+                    <div class="layui-input-inline">
+                        <input class="layui-input" autocomplete="off" id="date" name="date"
+                               lay-key="1">
+                    </div>
+
+                    <button class="layui-btn" lay-submit="" lay-filter="search">
+                        <i class="layui-icon layui-icon-search"></i>
+                    </button>
+
+                </div>
+
+
+            </blockquote>
+        </form>
+
+    </div>
+    <table id="permissionTable" lay-filter="tableFilter"></table>
+</div>
+<!--js逻辑-->
+<script th:src="@{/lib/layui/layui.js}"  th:inline="javascript"></script>
+
+<script>
+
+    layui.use(["element", "table", "laydate", "okLayer", "tree", "okUtils", "okMock", "form"], function () {
+        let table = layui.table;
+        let laydate = layui.laydate;
+        let okUtils = layui.okUtils;
+        let okMock = layui.okMock;
+        let okLayer = layui.okLayer;
+        let $ = layui.jquery;
+        let form = layui.form;
+
+        let newDate = new Date();
+        let month = newDate.getMonth() + 1;
+        let day = newDate.getDate();
+        if (month < 10) {
+            month = "0" + month;
+        }
+        if (day < 10) {
+            day = "0" + day;
+        }
+        let nowTime = newDate.getFullYear() + "-" + month + "-" + day;
+        laydate.render({elem: '#date', type: "date" ,range: true,value: newDate.getFullYear() + "-" + month + "-01" + " ~ " + nowTime, range:"~"});
+        initPermissionTable();
+
+        // 表单查询
+        form.on("submit(search)", function (data) {
+            initPermissionTable()
+            return false;
+        });
+
+        function initPermissionTable() {
+            okUtils.ajax("/activity-response/list/", "post", $("form").serializeArray(), true).done(function (response) {
+                let tb = table.render({
+                    elem: '#permissionTable',
+                    height: 'full-180',
+                    data: response.data,
+                    limit: 15,
+                    page: true,
+                    toolbar: "#toolbarTpl",
+                    size: "lg",
+
+                    cols: [
+                        [
+                            {type: "numbers", title: "序号", sort: true, width: 70},
+                            {field: "id", title: "任务ID", align: "center"},
+                            {field: "processDefinitionId", title: "部署ID", align: "center"},
+                            {field: "processDefinitionName", title: "部署名称", align: "center"},
+                            {
+                                field: "startTime",
+                                title: "开始时间",
+                                align: "center",
+                                templet: '<div>{{ layui.util.toDateString(d.startTime, "yyyy-MM-dd HH:mm:ss") }}</div>'
+                            },
+                            {
+                                field: "endTime", title: "结束时间", align: "center", templet: function (d) {
+                                    if (d.endTime == null) {
+                                        return '-'
+                                    } else {
+                                        return layui.util.toDateString(d.endTime, "yyyy-MM-dd HH:mm:ss")
+
+                                    }
+                                }
+                            },
+                            {
+                                title: "审批状态",
+                                align: "center",
+                                fixed: "right",
+                                templet: function (d) {
+                                    if (d.endActivityId == 'endSuccessEvent') {
+                                        return '<span class="layui-btn layui-btn layui-btn-xs" lay-event="show" >已通过</span>'
+                                    } else if (d.endActivityId != 'endSuccessEvent' && d.endActivityId != '' && d.endActivityId != null) {
+                                        return '<span class="layui-btn layui-btn-warm layui-btn-xs" lay-event="show">未通过</span>'
+                                    } else if (d.endActivityId == '' || d.endActivityId == null) {
+                                        return '<span class="layui-btn layui-btn-normal layui-btn-xs" lay-event="show">审批中</span>'
+                                    }
+                                }
+
+                            }
+                        ]
+                    ],
+                    done: function (res, curr, count) {
+                        console.info(res, curr, count);
+                    }
+                });
+            });
+
+        }
+
+
+        table.on("tool(tableFilter)", function (obj) {
+            let data = obj.data;
+            switch (obj.event) {
+                case "show":
+                    show(data.id);
+                    break;
+            }
+        });
+        table.on("toolbar(tableFilter)", function (obj) {
+            switch (obj.event) {
+                case "add":
+                    addOrEditPage("", "add");
+                    break;
+            }
+        });
+
+        // 详情
+        function show(taskId) {
+            okLayer.open("进度", "/activity-response/showDetailPage?id=" + taskId, "50%", "70%", null, function () {
+                initPermissionTable();
+            })
+        }
+
+
+    })
+
+    function show(id) {
+        alert(id)
+    }
+</script>
+
+</body>
+</html>

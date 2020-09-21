@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" th:href="@{/css/oksub.css}" href="../../css/oksub.css">
+    <style>
+        /*.layui-layer-page .layui-layer-content { overflow: visible; }*/
+    </style>
+</head>
+<body>
+<div class="layui-fluid">
+    <fieldset class="layui-elem-field layui-field-title">
+        <legend>备份列表</legend>
+    </fieldset>
+    <div class="layui-row">
+        <div class="layui-col-md4">
+            <button class="layui-btn layui-btn-normal" type="button" id="addBtn">
+                <i class="layui-icon">&#xe608;</i> 备份
+            </button>
+        </div>
+    </div>
+    <table id="table" lay-filter="table"></table>
+</div>
+<script th:src="@{/lib/layui/layui.js}" th:inline="javascript"></script>
+<script type="text/html" id="barFun">
+    <button type="button" class="layui-btn layui-btn-danger layui-btn-sm" lay-event="del">删除</button>
+</script>
+<script type="text/html" id="urlTpl">
+    <a href="{{d.path}}" target="_blank" style="color: blue;">{{d.path}}</a>
+</script>
+<script th:inline="none">
+    layui.use(['table', 'layer', 'jquery', "okLayer", "okUtils"], function () {
+        const table = layui.table;
+        const $ = layui.$;
+        const layer = layui.layer;
+        let okLayer = layui.okLayer;
+        const okUtils = layui.okUtils;
+        initPermissionTable();
+        //第一个实例
+        // table.render({
+        //     elem: '#table'
+        //     , height: 'full-120'
+        //     , url: '/baseBackup/list' //数据接口
+        //     , method: 'POST'
+        //     , page: false //开启分页
+        //     , cols: [[ //表头
+        //         {type: "numbers", title: "序号", width: 70, sort: true, fixed: "left"}
+        //
+        //         // , {
+        //         //     field: 'tool',
+        //         //     title: '操作',
+        //         //     toolbar: '#barFun',
+        //         //     width: 120,
+        //         //     sort: false,
+        //         //     align: 'center',
+        //         //     fixed: 'left'
+        //         // }
+        //         , {field: 'fileName', title: '文件名称', width: 120, sort: true}
+        //         , {field: 'path', title: '下载路径', sort: true, templet: "#urlTpl"}
+        //         , {field: 'serverPath', title: '服务器路径', sort: true}
+        //         , {
+        //             field: "createTime",
+        //             title: "创建时间",
+        //             templet: '<div>{{ layui.util.toDateString(d.createTime, "yyyy-MM-dd HH:mm:ss") }}</div>'
+        //         },
+        //
+        //     ]]
+        // });
+        function initPermissionTable() {
+            okUtils.ajax("/baseBackup/list", "post", null, true).done(function (response) {
+                table.render({
+                    elem: '#table',
+                    height: 'full-120',
+                    data: response.data,
+                    limit: 20,
+                    page: true,
+                    toolbar: "#toolbarTpl",
+                    size: "lg",
+                    cols: [[ //表头
+                        {type: "numbers", title: "序号", width: 70, sort: true, fixed: "left"}
+
+                        , {
+                            field: 'tool',
+                            title: '操作',
+                            toolbar: '#barFun',
+                            width: 120,
+                            sort: false,
+                            align: 'center',
+                            fixed: 'left'
+                        }
+                        , {field: 'fileName', title: '文件名称', width: 250, sort: true}
+                        , {field: 'path', title: '下载路径', sort: true, templet: "#urlTpl"}
+                        , {field: 'serverPath', title: '服务器路径', sort: true}
+                        , {
+                            field: "createTime",
+                            title: "创建时间",
+                            width: 180,
+                            sort: true,
+                            templet: '<div>{{ layui.util.toDateString(d.createTime, "yyyy-MM-dd HH:mm:ss") }}</div>'
+                        },
+
+                    ]],
+                    done: function (res, curr, count) {
+                    }
+                });
+            });
+
+        }
+
+        //监听工具条
+        table.on('tool(table)', function (obj) { //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+            let data = obj.data; //获得当前行数据
+            let layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+            let tr = obj.tr; //获得当前行 tr 的DOM对象
+
+            if (layEvent === 'del') { //删除
+                okLayer.confirm('确定删除？', function (index) {
+                    //向服务端发送删除指令
+                    $.post('/baseBackup/del', {'id': data.id}, function (res) {
+                        if (res.code === '0') {
+                            obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+                            layer.msg(res.msg);
+                        } else {
+                            layer.msg(res.msg);
+                        }
+                    });
+                    layer.close(index);
+                });
+            }
+            // else if (layEvent === 'edit') {
+            //     $.get('/user/load/add/or/update', {userId: data.userId}, function (html) {
+            //         layer.open({
+            //             title: '修改用户',
+            //             type: 1,
+            //             maxmin: true,
+            //             shade: 0.5,
+            //             anim: okLayer.animChoose(),
+            //             area: ['80%', '80%'],
+            //             content: html,
+            //             zIndex: layer.zIndex,
+            //             skin: okLayer.skinChoose()
+            //
+            //         });
+            //     });
+            // }
+        });
+
+        // 监听添加按钮
+        $('#addBtn').on('click', function () {
+            okLayer.confirm("确定备份？", function () {
+                $.ajax({
+                    url: '/baseBackup/backup/',
+                    type: 'post',
+                    async: false,
+                    data: {},
+                    success: function (response) {
+                        if(response.code === "0") {
+                            okLayer.greenTickMsg(response.msg,function () {
+                                initPermissionTable();
+                            })
+                        }else{
+                            okLayer.redCrossMsg(response.msg)
+
+                        }
+                    }
+                });
+            })
+        });
+    });
+
+
+</script>
+</body>
+</html>

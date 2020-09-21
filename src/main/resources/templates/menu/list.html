@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+        <link rel="stylesheet" th:href="@{/css/oksub.css}">
+        <link rel="stylesheet" th:href="@{/css/dtree.css}">
+        <link rel="stylesheet" th:href="@{/font/dtree/dtreefont.css}">
+    </head>
+    <body>
+        <div class="layui-fluid">
+            <fieldset class="layui-elem-field layui-field-title">
+                <legend>菜单</legend>
+            </fieldset>
+            <div class="layui-row layui-col-space10" id="content">
+                <div class="layui-col-sm4">
+                    <div class="layui-card">
+                        <div class="layui-card-header layui-bg-cyan">菜单列表</div>
+                        <div class="layui-card-body">
+                            <div class="layui-row">
+                                <button type="button" class="layui-btn layui-btn-normal layui-btn-sm"
+                                        id="add">
+                                    <i class="layui-icon">&#xe608;</i>
+                                    一级菜单添加
+                                </button>
+                            </div>
+                            <hr>
+                            <div class="layui-row" id="tree-content">
+                                <div id="tree"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-col-sm8">
+                    <div class="layui-card">
+                        <div class="layui-card-header layui-bg-cyan">修改菜单</div>
+                        <div class="layui-card-body" id="editTree">
+                            <blockquote class="layui-elem-quote">点击左侧菜单树修改</blockquote>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script th:src="@{/lib/layui/layui.js}"  th:inline="javascript"></script>
+        <script th:inline="none">
+            layui.use(['dtree', 'layer', 'jquery', 'form'], function () {
+                const dtree = layui.dtree;
+                const $ = layui.$;
+                const layer = layui.layer;
+
+                // 设置卡片高度
+                let height = window.parent.innerHeight;
+                $('.layui-card-body').css('height', height - 270 + 'px');
+
+                // 初始化树
+                $.get('/menu/sys-menu/list', function (result) {
+                    if (result.code === '0') {
+                        let data = [];
+                        // 构造第一级
+                        result.data.forEach(menu => {
+                            if (menu.parentId === 0) {
+                                data.push({
+                                    id: menu.id
+                                    , title: menu.title
+                                    , parentId: 0
+                                    , children: []
+                                });
+                            }
+                        });
+                        // 构造第二级
+                        result.data.forEach(menu => {
+                            if (menu.parentId !== 0) {
+                                data.forEach(parentMenu => {
+                                    if (menu.parentId === parentMenu.id) {
+                                        parentMenu.children.push({
+                                            id: menu.id
+                                            , title: menu.title
+                                            , parentId: menu.parentId
+                                            , children: []
+                                        });
+                                    }
+                                });
+                            }
+                        });
+
+                        const tree = dtree.render({
+                            id: 'tree'
+                            , elem: '#tree'
+                            , scroll: '#tree-content'
+                            , load: true
+                            , menubar: true
+                            , menubarTips: ['moveDown', 'moveUp', 'searchNode']
+                            , toolbar: true
+                            , toolbarShow: []
+                            , type: 'all'
+                            , data: data // 使用data加载
+                            , toolbarExt: [
+                                {
+                                    toolbarId: "testAdd",
+                                    icon: "dtree-icon-roundadd",
+                                    title: "添加菜单",
+                                    handler: function (node, $div) {
+                                        if (Number.parseInt(node.level) >= 2) {
+                                            layer.msg('最多两级菜单，不可再添加！');
+                                        } else {
+                                            $.get('/menu/sys-menu/load/add/or/update', {parentId: node.nodeId}, function (html) {
+                                                layer.open({
+                                                    type: 1
+                                                    , title: '添加菜单'
+                                                    , area: ['60%', '55%']
+                                                    , content: html
+                                                });
+                                            });
+                                        }
+                                    }
+                                }
+                                , {
+                                    toolbarId: "testDel",
+                                    icon: "dtree-icon-roundclose",
+                                    title: "删除菜单",
+                                    handler: function (node, $div) {
+                                        // 校验是否有子级
+                                        $.post('/menu/sys-menu/check/children', {id: node.nodeId}, function (result) {
+                                            if (result.code === "0") { // 无子级
+                                                layer.confirm('确定删除？', function (index) {
+                                                    // 校验是否有角色关联菜单
+                                                    $.post('/authority/check/role/menu', {menuId: node.nodeId}, function (result) {
+                                                        if (result.code === '0') {
+                                                            //向服务端发送删除指令
+                                                            $.post('/menu/sys-menu/delete', {id: node.nodeId}, function (result) {
+                                                                if (result.code === '0') {
+                                                                    tree.partialRefreshDel($div); // 这样即可删除节点
+                                                                    layer.close(index);
+                                                                } else {
+                                                                    layer.msg(result.msg, {icon: 5, anim: 6});
+                                                                }
+                                                            });
+                                                        } else {
+                                                            layer.msg(result.msg, {icon: 5, anim: 6});
+                                                        }
+                                                    });
+                                                });
+                                            } else { // 有子级
+                                                layer.msg(result.msg, {icon: 5, anim: 6});
+                                            }
+                                        });
+                                    }
+                                }
+                            ]
+                        });
+
+                        dtree.on("node(tree)", function (obj) {
+                            // if (!obj.param.leaf) {
+                            //     let $div = obj.dom;
+                            //     tree.clickSpread($div);  //调用内置函数展开节点
+                            // }
+
+                            $.get('/menu/sys-menu/load/add/or/update', {
+                                parentId: obj.param.parentId,
+                                id: obj.param.nodeId
+                            }, function (html) {
+                                $('#editTree').html(html);
+                            });
+                        });
+                    }
+                });
+
+                $('#add').on('click', () => {
+                    $.get('/menu/sys-menu/load/add/or/update', function (html) {
+                        layer.open({
+                            type: 1
+                            , title: '添加一级菜单'
+                            , area: ['60%', '55%']
+                            , content: html
+                        });
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>
