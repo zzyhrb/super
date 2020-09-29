@@ -16,6 +16,11 @@ import com.newgrand.superviseanalysis.system.user.entity.SysUser;
 import com.newgrand.superviseanalysis.utils.ResponseCode;
 import com.newgrand.superviseanalysis.utils.ResponseMsg;
 import com.newgrand.superviseanalysis.utils.Result;
+import org.activiti.engine.form.FormProperty;
+import org.activiti.engine.form.TaskFormData;
+import org.activiti.engine.history.HistoricProcessInstance;
+import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.stereotype.Controller;
@@ -264,5 +269,15 @@ public class ProjectInsertController {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         binder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, true));// CustomDateEditor为自定义日期编辑器
 
+    }
+    @ResponseBody
+    @PostMapping("/returns")
+    public Result returns(PmProject pmProject, PmProjectTableModel pmProjectTableModel){
+
+        String tableName="pm_project_detail_hljzghyyxm";
+
+
+        projectTableService.setIsThrow(tableName,pmProjectTableModel.getApplyFlag(),-1);// 审批未通过
+        return Result.success("成功！");
     }
 }
