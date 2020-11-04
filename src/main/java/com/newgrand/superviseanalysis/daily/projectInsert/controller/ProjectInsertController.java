@@ -180,8 +180,18 @@ public class ProjectInsertController {
             for (int i = 0; i < detailValue.length; i++) {
                 PmProjectTableModel pmProjectTableModel = new PmProjectTableModel();
 
+//                //String StrBd=detailValue[i]+"".replace(",","");
+//                String StrBd="48,576.1024".replace(",","");
+//                //BigDecimal iV=Integer.parseInt(v);
+//
+//                BigDecimal bd=new BigDecimal(StrBd);
+//                //设置小数位数，第一个变量是小数位数，第二个变量是取舍方法(四舍五入)
+//                bd=bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+//
+//                System.out.println(detailValue[i]+"".replace(",","")+"========================");
                 pmProjectTableModel.setDetailName(detailName[i]);
                 pmProjectTableModel.setDetailValue(detailValue[i]);
+//              pmProjectTableModel.setDetailValue(bd);
                 pmProjectTableModel.setTreeId(treeId[i]);
                 pmProjectTableModel.setProjectId(pmProject.getProjectId());
                 pmProjectTableModel.setOrganId(pmProject.getOrganId());

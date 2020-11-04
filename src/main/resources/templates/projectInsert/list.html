@@ -39,7 +39,6 @@
                     <i class="layui-icon layui-icon-search"></i>
                 </button>
 
-
             </div>
         </form>
     </div>
@@ -251,7 +250,6 @@
                         $("#project").append("<option value='" + result.data[i].projectId + "'>" + result.data[i].projectName + "</option>")
                     }
                     form.render('select');
-
                 }
             });
         }
@@ -295,8 +293,11 @@
     <a class="layui-btn layui-btn-sm" lay-event="detail">详情</a>
 
 
-    {{#  if([[${session.userInfo.roleId}]] == 1 && d.is_through != 0 ){ }}
-         <a class="layui-btn layui-btn-sm layui-btn-danger" lay-event="returns">驳回</a>
+<!--    {{#  if([[${session.userInfo.roleId}]] == 1 && d.is_through != 0 ){ }}-->
+<!--    <a class="layui-btn layui-btn-sm layui-btn-danger" lay-event="returns">驳回</a>-->
+<!--    {{#  } }}-->
+    {{#  if([[${session.userInfo.roleId}]] == 1 ){ }}
+     <a class="layui-btn layui-btn-sm layui-btn-danger" lay-event="returns">驳回</a>
     {{#  } }}
 
 

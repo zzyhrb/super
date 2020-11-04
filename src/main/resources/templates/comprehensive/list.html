@@ -421,20 +421,25 @@
         newWin.close();//关闭窗口
     }
     function retain(num) {
-        num1 = num.toString()
-
-        let index = num1.indexOf('.')
-        num = formatCurrency(num1)
-        if (index !== -1) {
-            num = num.substring(0)
-        } else {
-            num = num.substring(0)
+        if(num){
+            num1 = num.toString()
+            let index = num1.indexOf('.')
+            num = formatCurrency(num1)
+            if (index !== -1) {
+                num = num.substring(0)
+            } else {
+                num = num.substring(0)
+            }
+        }else{
+            num='';
         }
+
         return num
     }
 
     function formatCurrency(num)
     {
+        num = toDecimal2(num)
         if(num)
         {
             //将num中的$,去掉，将num变成一个纯粹的数据格式字符串
@@ -466,6 +471,26 @@
             return (sign + num + cents);
         }
 
+    }
+
+
+
+    function toDecimal2(x) {
+        var f = parseFloat(x);   //将字符串转换为浮点型
+        if (isNaN(f)) {       //isNaN() 函数用于检查其参数是否是非数字值。
+            return false;
+        }
+        var f = Math.round(x*100)/100;
+        var s = f.toString();
+        var rs = s.indexOf('.');
+        if (rs < 0) {
+            rs = s.length;
+            s += '.';
+        }
+        while (s.length <= rs + 2) {
+            s += '0';
+        }
+        return s;
     }
 </script>
 

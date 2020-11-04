@@ -96,7 +96,7 @@
 
     form.on("submit(add)", function (data) {
       var fields = $(data.form).serialize()
-
+      console.log(fields+"")
       // if(!formCheck(fields)){
       //     layer.msg('已录入过，无需再次录入！', {icon: 5, anim: 6});
       // }else{
@@ -196,7 +196,7 @@
                 content = "<span  id=\"span\" style='font-size: 20px'></span>"
               } else {
                 if (item.is_end) {
-                  content = "<span  id=\"span\" onchange=\'changemoney()\' style='font-size: 20px'>" + retain(detail_value, 2) + "</span>"
+                  content = "<span  id=\"span\" onchange=\'changemoney()\' style='font-size: 21px'>" + retaintex(detail_value, 2) + "</span>"
                 } else {
                   content = "<span  id=\"span\" style='font-size: 25px;color:blue;'>" + retain1(detail_value, 2) + "</span>"
                 }
@@ -280,9 +280,13 @@
 
           o('input[class="layui-input layui-table-edit"]').blur(function () {
             let val = o(this).val()
+
             o(this).remove()
             if (val != "") {
               countUpFu(countUp, td, val)
+              calculation()
+            }else{
+              countUpFu(countUp, td, '')
               calculation()
             }
 
@@ -363,9 +367,14 @@
     // 自增
     function countUpFu(countUp, obj, dataValue) {
 
+      if(dataValue){
+        o(obj).children("input[name='detailValue']").val(retain(dataValue, 2))
+        o(obj).children("span[id='span']").text(retaintex(dataValue, 2))
+      }else{
+        o(obj).children("input[name='detailValue']").val('')
+        o(obj).children("span[id='span']").text('')
+      }
 
-      o(obj).children("input[name='detailValue']").val(retain(dataValue, 2))
-      o(obj).children("span[id='span']").text(retaintex(dataValue, 2))
       // var count_up = new countUp({
       //     target: o(obj).children("span"),
       //     startVal: 0, //目标开始的值，默认值为0
@@ -442,14 +451,16 @@
   })
 
   function retain(num, decimal) {
-    num = num.toString()
-    let index = num.indexOf('.')
-    if (index !== -1) {
-      num = num.substring(0, decimal + index + 1)
-    } else {
-      num = num.substring(0)
-    }
-    return parseFloat(num).toFixed(decimal)
+
+      num = num.toString()
+      let index = num.indexOf('.')
+      if (index !== -1) {
+        num = num.substring(0, decimal + index + 1)
+      } else {
+        num = num.substring(0)
+      }
+
+      return parseFloat(num).toFixed(decimal)
 
    //
    // alert(num+"是不")
@@ -490,6 +501,8 @@
 
   }
 
+
+
   function retain1(num, decimal){
     // num = num.toString()
     // let index = num.indexOf('.')
@@ -500,17 +513,18 @@
     // }
     // return parseFloat(num).toFixed(decimal)
 
-
-
-     num = formatCurrency(num)
-     let index = num.indexOf('.')
-     if (index !== -1) {
-       num = num.substring(0, decimal + index + 1)
-     } else {
-       num = num.substring(0)
-     }
+    if(num){
+      num = formatCurrency(num)
+      let index = num.indexOf('.')
+      if (index !== -1) {
+        num = num.substring(0, decimal + index + 1)
+      } else {
+        num = num.substring(0)
+      }
+    }else{
+      num='';
+    }
      return num
-
 
   }
   function  retaintex(num, decimal){
@@ -527,8 +541,9 @@
           num = num.substring(0)
 
         }
-
-
+        if(num==0){
+          num='';
+        }
         return num
   }
   function accAdd(arg1, arg2) {
@@ -563,17 +578,20 @@
 
   //控制只能输入小数点后2位
   function clearNoNum(obj) {
-    if (obj.value != "") {
-      obj.value = obj.value.replace(/[^\-?\d.]/g, "")  //清除“数字”和“.”以外的字符
-      obj.value = obj.value.replace(/\.{2,}/g, ".") //只保留第一个. 清除多余的
-      obj.value = obj.value.replace(/\-{2,}/g, "-") //只保留第一个. 清除多余的
 
-      obj.value = obj.value.replace(".", "$#$").replace(/\./g, "").replace("$#$", ".")
-      obj.value = obj.value.replace(/^(\-)*(\d+)\.(\d\d).*$/, '$1$2.$3')//只能输入两个小数
-      if (obj.value.indexOf(".") < 0 && obj.value != "") {//以上已经过滤，此处控制的是如果没有小数点，首位不能为类似于 01、02的金额
-        obj.value = parseFloat(obj.value)
+
+      if (obj.value != "") {
+        obj.value = obj.value.replace(/[^\-?\d.]/g, "")  //清除“数字”和“.”以外的字符
+        obj.value = obj.value.replace(/\.{2,}/g, ".") //只保留第一个. 清除多余的
+        obj.value = obj.value.replace(/\-{2,}/g, "-") //只保留第一个. 清除多余的
+
+        obj.value = obj.value.replace(".", "$#$").replace(/\./g, "").replace("$#$", ".")
+        obj.value = obj.value.replace(/^(\-)*(\d+)\.(\d\d).*$/, '$1$2.$3')//只能输入两个小数
+        if (obj.value.indexOf(".") < 0 && obj.value != "") {//以上已经过滤，此处控制的是如果没有小数点，首位不能为类似于 01、02的金额
+          obj.value = parseFloat(obj.value)
+        }
       }
-    }
+
   }
 
   Math.formatFloat = function (f, digit) {
@@ -585,6 +603,8 @@
   //千分符
   function formatCurrency(num)
   {
+   num =toDecimal2(num)
+
     if(num)
     {
       if(isNaN(num)){
@@ -595,7 +615,7 @@
       //如果num不是数字，则将num置0，并返回
       if(''==num || isNaN(num)){return 'Not a Number ! ';}
       //如果num是负数，则获取她的符号
-      var sign = num.indexOf("-")> 0 ? '-' : '';
+      var sign = num.indexOf("-")== 0 ? '-' : '';
       //如果存在小数点，则获取数字的小数部分
       var cents = num.indexOf(".")> 0 ? num.substr(num.indexOf(".")) : '';
       cents = cents.length>1 ? cents : '' ;//注意：这里如果是使用change方法不断的调用，小数是输入不了的
@@ -611,22 +631,30 @@
         字符串长度为0/1/2/3时都不用添加
         字符串长度大于3的时候，从右往左数，有三位字符就加一个逗号，然后继续往前数，直到不到往前数少于三位字符为止
        */
-      for (var i = 0; i < Math.floor((num.length-(1+i))/3); i++)
-      {
-        num = num.substring(0,num.length-(4*i+3))+','+num.substring(num.length-(4*i+3));
+      if(num.substring(0,1)=="-"){
+        var num = num.replace(/[\ |\~|\`|\!|\@|\#|\$|\%|\^|\&|\*|\(|\)|\-|\_|\+|\=|\||\\|\[|\]|\{|\}|\;|\:|\"|\'|\,|\<|\.|\>|\/|\?]/g,"");
+        for (var i = 0; i < Math.floor((num.length-(1+i))/3); i++)
+        {
+          num = num.substring(0,num.length-(4*i+3))+','+num.substring(num.length-(4*i+3));
+        }
+      }else{
+        for (var i = 0; i < Math.floor((num.length-(1+i))/3); i++)
+        {
+          num = num.substring(0,num.length-(4*i+3))+','+num.substring(num.length-(4*i+3));
+        }
       }
       //将数据（符号、整数部分、小数部分）整体组合返回
       return (sign + num + cents);
     }else{
       if(isNaN(num)){
-        num = 0;
+        num ="";
       }
       //将num中的$,去掉，将num变成一个纯粹的数据格式字符串
       num = num.toString().replace(/\$|\,/g,'');
       //如果num不是数字，则将num置0，并返回
       if(''==num || isNaN(num)){return 'Not a Number ! ';}
       //如果num是负数，则获取她的符号
-      var sign = num.indexOf("-")> 0 ? '-' : '';
+      var sign = num.indexOf("-")== 0 ? '-' : '';
       //如果存在小数点，则获取数字的小数部分
       var cents = num.indexOf(".")> 0 ? num.substr(num.indexOf(".")) : '';
       cents = cents.length>1 ? cents : '' ;//注意：这里如果是使用change方法不断的调用，小数是输入不了的
@@ -642,9 +670,17 @@
         字符串长度为0/1/2/3时都不用添加
         字符串长度大于3的时候，从右往左数，有三位字符就加一个逗号，然后继续往前数，直到不到往前数少于三位字符为止
        */
-      for (var i = 0; i < Math.floor((num.length-(1+i))/3); i++)
-      {
-        num = num.substring(0,num.length-(4*i+3))+','+num.substring(num.length-(4*i+3));
+      if(num.substring(0,1)=="-"){
+        var num = num.replace(/[\ |\~|\`|\!|\@|\#|\$|\%|\^|\&|\*|\(|\)|\-|\_|\+|\=|\||\\|\[|\]|\{|\}|\;|\:|\"|\'|\,|\<|\.|\>|\/|\?]/g,"");
+        for (var i = 0; i < Math.floor((num.length-(1+i))/3); i++)
+        {
+          num = num.substring(0,num.length-(4*i+3))+','+num.substring(num.length-(4*i+3));
+        }
+      }else{
+        for (var i = 0; i < Math.floor((num.length-(1+i))/3); i++)
+        {
+          num = num.substring(0,num.length-(4*i+3))+','+num.substring(num.length-(4*i+3));
+        }
       }
       //将数据（符号、整数部分、小数部分）整体组合返回
       return (sign + num + cents);
@@ -653,6 +689,24 @@
 
   }
 
+
+  function toDecimal2(x) {
+    var f = parseFloat(x);   //将字符串转换为浮点型
+    if (isNaN(f)) {       //isNaN() 函数用于检查其参数是否是非数字值。
+      return false;
+    }
+    var f = Math.round(x*100)/100;
+    var s = f.toString();
+    var rs = s.indexOf('.');
+    if (rs < 0) {
+      rs = s.length;
+      s += '.';
+    }
+    while (s.length <= rs + 2) {
+      s += '0';
+    }
+    return s;
+  }
 </script>
 
 </body>
