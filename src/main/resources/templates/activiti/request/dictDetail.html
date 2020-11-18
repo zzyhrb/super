@@ -46,9 +46,13 @@
               {
                 title: "金额（元）",
                 align: "right",
-                templet: '<div>{{d.value }}</div>'
-              }
+                // '<div id="load">{{d.value }}</div>'
+                templet:function(d){
+                  var nums =toDecimal2(d.value)
+                  return '<div id="load">'+nums+'</div>';
+                }
 
+              }
 
             ]]
 
@@ -57,8 +61,23 @@
 
     }
   })
-
-
+  function toDecimal2(x) {
+    var f = parseFloat(x);   //将字符串转换为浮点型
+    if (isNaN(f)) {       //isNaN() 函数用于检查其参数是否是非数字值。
+      return false;
+    }
+    var f = Math.round(x*100)/100;
+    var s = f.toString();
+    var rs = s.indexOf('.');
+    if (rs < 0) {
+      rs = s.length;
+      s += '.';
+    }
+    while (s.length <= rs + 2) {
+      s += '0';
+    }
+    return s;
+  }
 
 </script>
 

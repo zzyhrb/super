@@ -2,8 +2,8 @@ server:
   port: 8080 # 端口
 spring:
   datasource:
-#    url: jdbc:sqlserver://42.101.44.131;databaseName=SuperviseAnalysisDB # 数据库地址
-    url: jdbc:sqlserver://10.1.1.139;databaseName=SuperviseAnalysisDB # 数据库地址
+    url: jdbc:sqlserver://42.101.44.131;databaseName=SuperviseAnalysisDB # 数据库地址
+#    url: jdbc:sqlserver://10.1.1.139;databaseName=SuperviseAnalysisDB2 # 数据库地址
 
     username: sa # 账号
     password: Hckj201509 # 密码

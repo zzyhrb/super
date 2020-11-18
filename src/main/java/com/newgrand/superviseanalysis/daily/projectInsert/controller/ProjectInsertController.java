@@ -284,9 +284,15 @@ public class ProjectInsertController {
     @PostMapping("/returns")
     public Result returns(PmProject pmProject, PmProjectTableModel pmProjectTableModel){
 
-        String tableName="pm_project_detail_hljzghyyxm";
+        pmProject = projectService.getById(pmProject.getProjectId());
 
+        QueryWrapper<PmProjectTable> projectTableWrapper = new QueryWrapper<>();
+        projectTableWrapper.eq("project_id", pmProject.getProjectId());
+        PmProjectTable projectTable = projectTableService.getOne(projectTableWrapper);
 
+    //   String tableName="pm_project_detail_hljzghyyxm";
+           String tableName=projectTable.getTableName();
+            System.out.print("表名是=======================>:"+tableName);
         projectTableService.setIsThrow(tableName,pmProjectTableModel.getApplyFlag(),-1);// 审批未通过
         return Result.success("成功！");
     }
