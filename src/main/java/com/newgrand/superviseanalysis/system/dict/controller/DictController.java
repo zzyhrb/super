@@ -15,7 +15,9 @@ import com.newgrand.superviseanalysis.utils.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -53,13 +55,16 @@ public class DictController {
 
     @ResponseBody
     @RequestMapping("/list")
-    public Result list(HttpServletRequest request, DictOrganUserVo dictOrganUserVo, HttpSession httpSession) {
+    public Result list(String organId ,HttpServletRequest request, DictOrganUserVo dictOrganUserVo, HttpSession httpSession) {
 
         if (dictOrganUserVo.getParentId() == null) {
             dictOrganUserVo.setParentId((long) 0);
+
         } else {
-            SysUser user = (SysUser) httpSession.getAttribute("userInfo");
-            dictOrganUserVo.setOrganId(user.getOrganId());
+//            SysUser user = (SysUser) httpSession.getAttribute("userInfo");
+//            dictOrganUserVo.setOrganId(user.getOrganId());
+            dictOrganUserVo.setOrganId(organId);
+
         }
 
         List<DictOrganUserVo> list = dictService.listWithOrganNameAndUserRealName(dictOrganUserVo);

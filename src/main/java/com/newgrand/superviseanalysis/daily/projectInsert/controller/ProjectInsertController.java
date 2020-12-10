@@ -248,10 +248,10 @@ public class ProjectInsertController {
     }
 
     @GetMapping("/checkDictPage")
-    public String checkDict(String dictId, Model model, String treeId) {
+    public String checkDict(String dictId, Model model, String treeId,String organId) {
         model.addAttribute("dictId", dictId);
         model.addAttribute("treeId", treeId);
-
+        model.addAttribute("organId", organId);
         return "projectInsert/checkDict";
     }
 

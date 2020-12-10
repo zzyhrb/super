@@ -86,7 +86,7 @@
         initPermissionTable()
 
         function initPermissionTable(data) {
-            okUtils.ajax("/dict/list/?parentId=" + [[${dictId}]], "post", data, true).done(function (response) {
+            okUtils.ajax("/dict/list/?parentId=" + [[${dictId}]]+"&organId="+[[${organId}]], "get", data, true).done(function (response) {
                 table.render({
                     elem: '#permissionTable',
                     height: 'full-120',
@@ -240,12 +240,10 @@
                 let countVal = 0;
                 for (let i = 0; i < data.length; i++) {
                     let value1 = $("input[name='" + data[i].dictId + "']").next("input[name='value']").val();// 获取选中金额
-                    alert(value1+"替换前==");
                     let value =value1.replace(/,/g,"");
                     if (value == "") {
                         value = 0;
                     }
-                    alert(value+"提交金额为");
                     countVal =  parent.retain(parent.accAdd(countVal,value),2)
 
                     if (parent.layui.$("." + data[i].dictId).length == 0) {

@@ -46,7 +46,7 @@
 
     <input type="hidden" name="type" th:value="${type}">
     <input type="hidden" name="tableName" th:value="${tableName}">
-    <input type="hidden" name="organId" th:value="${pmProject.organId}">
+    <input type="hidden" name="organId" id ="organId" th:value="${pmProject.organId}">
     <input type="hidden" name="projectId" th:value="${pmProject.projectId}">
     <input type="hidden" name="applyFlag" th:value="${applyFlag}">
 
@@ -345,7 +345,8 @@
           }
         })
       } else {
-        okLayer.open("选择明细", "checkDictPage?dictId=" + data.item.dict_id + "&treeId=" + data.item.id, "90%", "70%", null, function (item) {
+        let organId = document.getElementById("organId").value
+        okLayer.open("选择明细", "checkDictPage?dictId=" + data.item.dict_id + "&treeId=" + data.item.id+"&organId=" +organId, "90%", "70%", null, function (item) {
           o("input[name='" + data.item.id + "dictId']").removeClass("one")
           o("input[name='" + data.item.id + "value']").removeClass("one")
           calculation()
